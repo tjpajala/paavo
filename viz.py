@@ -5,6 +5,9 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 import pandas as pd
+import seaborn as sns
+import similarity
+import data_transforms
 
 PCA_VARS = ['he_vakiy', 'he_naiset', 'he_miehet', 'he_kika',
             'he_0_2', 'he_3_6', 'he_7_12', 'he_13_15', 'he_16_17', 'he_18_19',
@@ -78,7 +81,7 @@ def do_pca(X, n_components):
 def pca_2d_plot(X_pca, target_names, color):
     x0 = np.array([(i - min(X_pca[:, 0])) / (max(X_pca[:, 0]) - min(X_pca[:, 0])) for i in X_pca[:, 0]])
     y0 = np.array([(i - min(X_pca[:, 1])) / (max(X_pca[:, 1]) - min(X_pca[:, 1])) for i in X_pca[:, 1]])
-    plt.interactive(False)
+    #plt.interactive(False)
     fig = plt.figure(figsize=(24, 16))
     ax = fig.add_subplot(111)
     p = ax.scatter(x=x0, y=y0, cmap='cool', c=color, alpha=0.5, s=8)
@@ -144,4 +147,61 @@ def exploratory_pca(X, n_components):
     plt.show()
 
     return None
+
+
+def missing_plot(data):
+    sns.heatmap(data.isnull())
+    plt.show()
+
+
+def table_similar_with_names(data, orig_name, comparison_names, target_names, X_pca, cols):
+    orig_idx = (target_names == orig_name).idxmax()
+    comp_idx = target_names[target_names.isin(comparison_names)].index.tolist()
+    all_names = comparison_names.tolist()
+    all_names.append(orig_name)
+    if cols is None:
+        cols = ['nimi'] + data_transforms.NOMINAL_VARS + ['dist']
+    d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
+    df = data.copy()
+    df['dist'] = d[orig_idx, :]
+    df.sort_values(by='dist', ascending=True, inplace=True)
+    df = df.loc[df['nimi'].isin(all_names), cols]
+    return df
+
+
+def visualize_similar_with_names(data, orig_name, comparison_names, target_names, X_pca, cols_to_plot):
+    orig_idx = (target_names == orig_name).idxmax()
+    comp_idx = target_names[target_names.isin(comparison_names)].index.tolist()
+    all_names = comparison_names.tolist()
+    all_names.append(orig_name)
+    if cols_to_plot is None:
+        cols_to_plot = ['nimi'] + data_transforms.NOMINAL_VARS + ['dist']
+    d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
+    df = data.copy()
+    df['dist'] = d[orig_idx, :]
+    df.sort_values(by='dist', ascending=True, inplace=True)
+    df = df.loc[df['nimi'].isin(all_names), cols_to_plot]
+    melted = df.melt(id_vars=['nimi'])
+
+    g = sns.catplot(x="value", y="nimi", col="variable", col_wrap=5, data=melted, margin_titles=True, sharex=False,
+                    sharey=True, s=9)
+
+    # Use semantically meaningful titles for the columns
+    vartitles = pd.read_csv('paavo_vars.csv', sep=";")
+    titles_dict = dict(zip(vartitles['koodi'], vartitles['nimi']))
+    titles_dict['dist'] = 'PCA distance'
+    titles = [titles_dict.get(x) for x in melted['variable'].unique()]
+    for ax, title in zip(g.axes.flat, titles):
+        # Set a different title for each axes
+        ax.set(title=title)
+    #
+    #    # Make the grid horizontal instead of vertical
+    #    ax.xaxis.grid(False)
+    #    ax.yaxis.grid(True)
+
+    #sns.despine(left=True, bottom=True)
+    plt.show()
+
+
+    return df
 

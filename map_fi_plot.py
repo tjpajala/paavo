@@ -2,6 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gp
 import numpy as np
+from bokeh.plotting import figure, show
+from bokeh.models import GeoJSONDataSource
+from bokeh.plotting import figure, output_file, show, ColumnDataSource
+from bokeh.models.glyphs import Patches
 
 CITIES = [
     'Helsinki Keskusta - Etu-Töölö',
@@ -9,7 +13,7 @@ CITIES = [
     'Oulu Keskus',
     'Turku Keskus',
     'Kuopio Keskus',
-    'Joensuu Keskus',
+    'Joensuu Keskus Eteläinen',
     'Seinäjoki Keskus',
     'Rovaniemi Keskus',
     'Vaasa Keskus',
@@ -19,7 +23,14 @@ CITIES = [
     'Kouvola Keskus',
     'Lappeenranta keskus',
     'Hämeenlinna Keskus',
-    'Mikkeli Keskus'
+    'Mikkeli Keskus',
+    'Utsjoki Keskus',
+    'Kittilä Keskus',
+    'Sodankylä Keskus',
+    'Kokkola Keskus',
+    'Pyhäntä Keskus',
+    'Savonlinna Keskus',
+    'Kajaani Keskus'
 ]
 
 
@@ -50,8 +61,8 @@ def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cma
 
 
 def map_with_highlights(dataframe, title='', origin_idx=None,
-                        highlights_idx=None, year=2018):
-    fig = plt.figure(figsize=(16, 16))
+                        highlights_idx=None, year=2018, figsize=(16,16)):
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     plt.title(title)
     df = merge_to_polygons_for_year(dataframe, year)
@@ -77,7 +88,7 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     plt.show()
 
 
-def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018):
+def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16,16)):
     df = merge_to_polygons_for_year(dataframe, year)
     if origin_name not in list(df['nimi_x']):
         raise ValueError('origin_name not in data!')
@@ -89,4 +100,29 @@ def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=
         highlights = [df['nimi_x'].get(x) for x in np.random.choice(range(len(df['nimi_x'])), size=15, replace=False)]
     origin_idx = (dataframe['nimi'] == origin_name).idxmax()
     highlights_idx = dataframe.index[dataframe['nimi'].isin(highlights)].tolist()
-    map_with_highlights(dataframe, title, origin_idx, highlights_idx, year)
+    map_with_highlights(dataframe, title, origin_idx, highlights_idx, year, figsize)
+
+def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018):
+
+    output_file('test.html')
+    df = merge_to_polygons_for_year(dataframe,year)
+
+    TOOLTIPS = [
+        ("Postinumero:", "$pono"),
+        ("(x,y)", "($euref_x, $euref_y)"),
+    ]
+
+    p = figure(plot_width=600, plot_height=1000, tooltips=TOOLTIPS,
+               title="Mouse over the dots")
+
+    df_origin = df.loc[df['nimi_x']==origin_name, :]
+    df_highlights = df.loc[df['nimi_x'].isin(highlights), :]
+
+    glyph_orig = Patches(xs="xs", ys="ys", fill_color="red")
+    glyph_comp = Patches(xs="xs", ys="ys", fill_color="orig")
+
+    p.multi_line('xs', 'ys', source=GeoJSONDataSource(geojson=df.to_json()), color='gray', line_width=0.5, alpha=0.7)
+    p.add_glyph(GeoJSONDataSource(geojson=df_origin.to_json()), glyph_orig)
+    p.add_glyph(GeoJSONDataSource(geojson=df_highlights.to_json()), glyph_comp)
+
+    show(p)

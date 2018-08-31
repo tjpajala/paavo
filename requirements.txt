@@ -1,0 +1,9 @@
+bokeh
+seaborn
+geopandas
+pyjstat
+requests
+numpy
+matplotlib
+pandas
+scikit-learn
