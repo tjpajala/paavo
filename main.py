@@ -1,15 +1,17 @@
-import load_data
-import pandas as pd
-import numpy as np
-import data_transforms
 import importlib
-import viz
 from itertools import chain
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+import pandas as pd
+
+import data_transforms
 import from_r_gen
-import similarity
+import load_data
 import map_fi_plot
+import similarity
+import viz
 from persons import engineer_w_kid, student_21F
+from sklearn.linear_model import LinearRegression
+
 importlib.reload(from_r_gen)
 importlib.reload(load_data)
 importlib.reload(data_transforms)
@@ -41,14 +43,27 @@ to_format = ['he_kika', 'tr_mtu', 'ra_as_kpa', 'hr_pi_tul', 'hr_ke_tul', 'hr_hy_
 for c in to_format:
     data[c] = [float(str(x).replace(",", ".")) for x in data[c]]
 
+data['rakennukset_bin'] = pd.cut(data['ra_asrak'], 5, retbins=False, labels=False)
+
+
+
+
 
 #save aggregated to different df
 data_agg = data.loc[data["pono.level"] != 5, :]
 data = data.loc[data['pono.level'] == 5, :]
 
 viz.missing_plot(data)
-data.fillna(0, inplace=True)
+#data.fillna(0, inplace=True)
 #data.fillna(data.mean(), inplace=True)
+for column_to_impute in data.columns.values:
+    if column_to_impute not in ['pono', 'pono.level', 'vuosi', 'nimi']:
+        data.loc[data[column_to_impute].isnull(), column_to_impute] = data_transforms.\
+            impute_with_class_mean(data, column_to_impute)
+
+
+#does mean exist for each variable and class?
+#data_transforms.check_class_means(data)
 viz.missing_plot(data)
 
 #select only one year
@@ -95,7 +110,6 @@ viz.visualize_similar_with_names(data_l5, 'Möckelö', places_most_similar, targ
 #similarity.write_similar_to_csv(places_most_similar, engineer_w_kid, data_l5, 'compare_engineer.csv')
 
 
-
 places_most_similar = similarity.get_n_most_similar_to_person_with_names(student_21F, pipe, X_pca, 15, target_names)
 print(places_most_similar)
 map_fi_plot.map_with_highlights_names(data_l5, "Where should a 21F student with kids move?",
@@ -108,3 +122,8 @@ viz.visualize_similar_with_names(data, orig_name='Otaniemi', comparison_names=na
                                  target_names=target_names, X_pca=X_pca, cols_to_plot=None)
 
 
+map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Jyväskylä Keskus', range_km=100,
+                                     how='intersection', d=d, target_names=target_names, n_most=15)
+
+map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
+                                     how='difference', d=d, target_names=target_names, n_most=15)

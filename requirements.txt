@@ -1,3 +1,4 @@
+ipywidgets
 bokeh
 seaborn
 geopandas

@@ -1,11 +1,11 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import geopandas as gp
+import matplotlib.pyplot as plt
 import numpy as np
-from bokeh.plotting import figure, show
+import pandas as pd
+import similarity
 from bokeh.models import GeoJSONDataSource
-from bokeh.plotting import figure, output_file, show, ColumnDataSource
 from bokeh.models.glyphs import Patches
+from bokeh.plotting import figure, output_file, show
 
 CITIES = [
     'Helsinki Keskusta - Etu-Töölö',
@@ -61,7 +61,7 @@ def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cma
 
 
 def map_with_highlights(dataframe, title='', origin_idx=None,
-                        highlights_idx=None, year=2018, figsize=(16,16)):
+                        highlights_idx=None, year=2018, figsize=(16,16), area=None):
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     plt.title(title)
@@ -76,9 +76,11 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     else:
         highlights_idx = df.loc[df['posti_alue'].isin(dataframe.iloc[highlights_idx, :]['pono']), :].index.tolist()
     df_highlights = df.iloc[highlights_idx, :]
-    df.plot(color='white', edgecolor="grey", alpha=0.1, ax=ax)
-    df_origin.plot(color='red', ax=ax)
-    df_highlights.plot(color='orange', ax=ax)
+    df.plot(facecolor='none', edgecolor="grey", alpha=0.1, ax=ax)
+    if area is not None:
+        area.plot(facecolor='none', edgecolor='purple', alpha=0.3, ax=ax)
+    df_origin.plot(facecolor='red', ax=ax)
+    df_highlights.plot(facecolor='orange', ax=ax)
     fig.get_axes()[0].set_axis_off()
 
     plt.annotate(df_origin['nimi_x'].to_string(),
@@ -88,7 +90,7 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     plt.show()
 
 
-def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16,16)):
+def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16,16), area=None):
     df = merge_to_polygons_for_year(dataframe, year)
     if origin_name not in list(df['nimi_x']):
         raise ValueError('origin_name not in data!')
@@ -100,7 +102,8 @@ def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=
         highlights = [df['nimi_x'].get(x) for x in np.random.choice(range(len(df['nimi_x'])), size=15, replace=False)]
     origin_idx = (dataframe['nimi'] == origin_name).idxmax()
     highlights_idx = dataframe.index[dataframe['nimi'].isin(highlights)].tolist()
-    map_with_highlights(dataframe, title, origin_idx, highlights_idx, year, figsize)
+    map_with_highlights(dataframe, title, origin_idx, highlights_idx, year, figsize, area)
+
 
 def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018):
 
@@ -126,3 +129,28 @@ def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018)
     p.add_glyph(GeoJSONDataSource(geojson=df_highlights.to_json()), glyph_comp)
 
     show(p)
+
+
+def plot_similar_in_geo_area(data, orig_name, target, range_km, how, d, target_names, n_most):
+    methods = ['intersection', 'difference']
+    if how not in methods:
+        raise ValueError('how should be either "intersection" or "difference"')
+    if target is None:
+        target = orig_name
+    df = merge_to_polygons_for_year(data, 2018)
+    if orig_name not in list(df['nimi_x']):
+        raise ValueError('origin_name not in data!')
+    if target not in list(df['nimi_x']):
+        raise ValueError('target not in data!')
+    #range expressed in kms
+    #limit in shapely units
+    limit = range_km*1000
+    area = gp.GeoDataFrame()
+    area['geometry'] = df.loc[df['nimi_x'] == target, 'geometry'].buffer(limit)
+    area.crs = df.crs
+    included = gp.overlay(df, area, how=how)
+
+    similar = similarity.get_similar_in_geo_area(included, orig_name, d, target_names, n_most)
+    #included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
+    map_with_highlights_names(data, '', orig_name, similar, 2018, area=area)
+

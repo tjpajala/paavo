@@ -1,7 +1,8 @@
-import numpy as np
-import sklearn
-import pandas as pd
 from itertools import chain
+
+import numpy as np
+import pandas as pd
+import sklearn
 
 
 def similarity_for_two_objects(func, x, y):
@@ -63,9 +64,17 @@ def get_n_most_similar_to_person_with_names(person, pipe, X_pca, n_most, target_
     similar = get_n_most_similar_to_person(person, pipe, X_pca, n_most, metric)
     return target_names[similar]
 
+
 def write_similar_to_csv(places_most_similar, person, data_l5, filename):
     places = data_l5.loc[data_l5['nimi'].isin(places_most_similar.values), :]
     append_student = pd.DataFrame([list(chain.from_iterable([['00000', 0, 2018, 'Student'], person, [0]]))],
                                   columns=places.columns)
     compare = places.append(append_student)
     compare.to_csv(filename)
+
+
+def get_similar_in_geo_area(included_area, orig_name, d, target_names, n_most):
+    similar = get_n_most_similar_with_name(orig_name, d, target_names, len(target_names) - 1).tolist()
+    similar = [x for x in similar if x in included_area.nimi_x.tolist()][0:n_most]
+    return similar
+

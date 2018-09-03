@@ -1,4 +1,5 @@
 import re
+from sklearn.linear_model import LinearRegression
 
 
 def get_inhabitants(df, year):
@@ -219,3 +220,32 @@ def get_nominal_cols(year):
 def round_pono(pono, level):
     div = 10**(level-4)
     return pono - pono % div
+
+
+def impute_with_class_mean(data, column_to_impute):
+    if column_to_impute not in ['pono', 'pono.level', 'vuosi', 'nimi']:
+        df = data.drop(labels=['pono', 'pono.level', 'vuosi', 'nimi'], axis=1)
+        val_table = df.groupby(by='rakennukset_bin')[column_to_impute].describe()['mean']
+        data_predict = df.loc[df[column_to_impute].isnull(), :]
+
+        return [val_table[row.rakennukset_bin] for index, row in data_predict.iterrows()]
+    return []
+
+
+def impute_with_regression(data, column_to_impute):
+    df = data.drop(labels=['pono', 'pono.level', 'vuosi', 'nimi'], axis=1)
+    #select only cols with all values
+    cols = df.dropna(axis=1, inplace=False).columns.values.tolist()
+    #df.dropna(axis=1, inplace=True)
+    df_imp = df.dropna(axis=0).loc[:, cols+[column_to_impute]]
+    lr = LinearRegression().fit(X=df_imp.drop(labels=column_to_impute, axis=1), y=df_imp.loc[:, column_to_impute])
+    data_predict = df.loc[df[column_to_impute].isnull(), cols]
+
+    return lr.predict(data_predict)
+
+
+def check_class_means(data):
+    for col in data.columns.values:
+        if col not in ['pono', 'pono.level', 'vuosi', 'nimi']:
+            print(col)
+            print(data.groupby(by='rakennukset_bin')[col].describe()['mean'])

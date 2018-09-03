@@ -1,13 +1,13 @@
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
 import pandas as pd
 import seaborn as sns
-import similarity
+from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
 import data_transforms
+import similarity
 
 PCA_VARS = ['he_vakiy', 'he_naiset', 'he_miehet', 'he_kika',
             'he_0_2', 'he_3_6', 'he_7_12', 'he_13_15', 'he_16_17', 'he_18_19',
@@ -165,7 +165,9 @@ def table_similar_with_names(data, orig_name, comparison_names, target_names, X_
     df = data.copy()
     df['dist'] = d[orig_idx, :]
     df.sort_values(by='dist', ascending=True, inplace=True)
+    last = df.tail(5)
     df = df.loc[df['nimi'].isin(all_names), cols]
+    df = df.append(last.loc[:, cols])
     return df
 
 
@@ -202,6 +204,4 @@ def visualize_similar_with_names(data, orig_name, comparison_names, target_names
     #sns.despine(left=True, bottom=True)
     plt.show()
 
-
     return df
-
