@@ -37,7 +37,7 @@ def name_to_matrix_row(target_names, name_to_search):
 def get_n_most_similar(mat, index, n_most):
     mat_internal = np.copy(mat)
     np.fill_diagonal(mat_internal, 1e15)
-    return np.argpartition(mat_internal[index, :], n_most)[0:n_most]
+    return np.argpartition(mat_internal[index, :], range(n_most))[0:n_most]
 
 
 def get_n_most_similar_with_name(origin_name, mat, target_names, n_most):
@@ -75,6 +75,6 @@ def write_similar_to_csv(places_most_similar, person, data_l5, filename):
 
 def get_similar_in_geo_area(included_area, orig_name, d, target_names, n_most):
     similar = get_n_most_similar_with_name(orig_name, d, target_names, len(target_names) - 1).tolist()
-    similar = [x for x in similar if x in included_area.nimi_x.tolist()][0:n_most]
+    similar = [x for x in similar if x in included_area.nimi.tolist()][0:n_most]
     return similar
 

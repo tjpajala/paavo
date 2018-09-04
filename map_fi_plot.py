@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import similarity
+import viz
 from bokeh.models import GeoJSONDataSource
 from bokeh.models.glyphs import Patches
 from bokeh.plotting import figure, output_file, show
@@ -131,7 +132,7 @@ def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018)
     show(p)
 
 
-def plot_similar_in_geo_area(data, orig_name, target, range_km, how, d, target_names, n_most):
+def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pipe):
     methods = ['intersection', 'difference']
     if how not in methods:
         raise ValueError('how should be either "intersection" or "difference"')
@@ -149,8 +150,17 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, d, target_n
     area['geometry'] = df.loc[df['nimi_x'] == target, 'geometry'].buffer(limit)
     area.crs = df.crs
     included = gp.overlay(df, area, how=how)
-
-    similar = similarity.get_similar_in_geo_area(included, orig_name, d, target_names, n_most)
+    included = included.append(df.loc[df['nimi_x']==orig_name, :], sort=True)
+    included.drop(labels=['vuosi_y', 'nimi_y', 'posti_alue', 'posti_aluenro'], axis=1, inplace=True)
+    included.rename(index=str, columns={'posti_alue':'pono','nimi_x':'nimi', 'vuosi_x':'vuosi'}, inplace=True)
+    X, y, target_names = viz.get_pca_data(included, 2018, 5)
+    target_names.index = range(len(target_names))
+    X_pca = pipe.transform(X)
+    d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
+    s2 = similarity.get_n_most_similar_with_name(orig_name, d, target_names, n_most)
+    #idx = target_names.isin(included['nimi_x'].append(pd.Series(orig_name)))
+    similar = similarity.get_similar_in_geo_area(included, orig_name, d,
+                                                 target_names, n_most)
     #included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
     map_with_highlights_names(data, '', orig_name, similar, 2018, area=area)
 

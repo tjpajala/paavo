@@ -1,5 +1,4 @@
 import importlib
-from itertools import chain
 
 import pandas as pd
 
@@ -10,7 +9,6 @@ import map_fi_plot
 import similarity
 import viz
 from persons import engineer_w_kid, student_21F
-from sklearn.linear_model import LinearRegression
 
 importlib.reload(from_r_gen)
 importlib.reload(load_data)
@@ -22,32 +20,7 @@ importlib.reload(map_fi_plot)
 data = from_r_gen.load_r_data('paavo_counts.csv')
 data2 = from_r_gen.load_r_data('paavo_shares.csv')
 
-#combine nominal and share vars
-data = data.loc[:, list(chain.from_iterable([['pono', 'pono.level', 'vuosi', 'nimi'], data_transforms.NOMINAL_VARS]))]
-data2 = data2.loc[:, list(chain.from_iterable([['pono', 'vuosi', 'nimi'], data_transforms.SHARES_VARS]))]
-
-
-cols_to_use = data2.columns.difference(data.columns)
-data = pd.merge(data, data2[cols_to_use], left_index=True, right_index=True, how='outer')
-data = data.reindex()
-
-data.loc[data['pono.level'] == 5, 'pono'] = [format(x, '05d') for x in data.loc[data['pono.level'] == 5, 'pono']]
-data.loc[data['pono.level'] == 3, 'pono'] = [format(x*100, '05d') for x in data.loc[data['pono.level'] == 3, 'pono']]
-data.loc[data['pono.level'] == 2, 'pono'] = [format(x*100, '05d') for x in data.loc[data['pono.level'] == 2, 'pono']]
-
-
-to_format = ['he_kika', 'tr_mtu', 'ra_as_kpa', 'hr_pi_tul', 'hr_ke_tul', 'hr_hy_tul',
-             'pt_tyoll', 'pt_tyott', 'pt_tyovu', 'pt_0_14', 'pt_opisk', 'pt_elakel', 'hr_ovy',
-             'tr_pi_tul', 'tr_ke_tul', 'tr_hy_tul', 'te_nuor', 'te_eil_np', 'te_laps', 'te_aik',
-             'te_elak', 'te_omis_as', 'te_vuok_as', 'te_takk', 'te_as_valj']
-for c in to_format:
-    data[c] = [float(str(x).replace(",", ".")) for x in data[c]]
-
-data['rakennukset_bin'] = pd.cut(data['ra_asrak'], 5, retbins=False, labels=False)
-
-
-
-
+data = data_transforms.merge_and_clean_data(data, data2)
 
 #save aggregated to different df
 data_agg = data.loc[data["pono.level"] != 5, :]
@@ -92,13 +65,13 @@ print(names)
 data_l5 = data.loc[data['pono.level'] == 5, :].assign(max_factor=pd.DataFrame(X_pca.argmax(axis=1)))
 map_fi_plot.map_fi_postinumero(data_l5, "Highest factors per area", color_var='max_factor')
 
-map_fi_plot.map_with_highlights_names(data_l5, "How similar to Jupperi?", 'Jupperi',
-                                      similarity.get_n_most_similar_with_name('Jupperi', d, target_names, 15))
+map_fi_plot.map_with_highlights_names(data_l5, "How similar to Vattuniemi?", 'Vattuniemi',
+                                      similarity.get_n_most_similar_with_name('Vattuniemi', d, target_names, 15))
 map_fi_plot.map_with_highlights_names(data_l5, "How similar to Otaniemi?", 'Otaniemi',
                                       similarity.get_n_most_similar_with_name('Otaniemi', d, target_names, 15))
 names = similarity.get_n_most_similar_with_name("Otaniemi", d, target_names, 10)
 print(names)
-viz.visualize_similar_with_names(data, orig_name='Otaniemi', comparison_names=names,
+viz.visualize_similar_with_names(data, orig_name='Vattuniemi', comparison_names=names,
                                  target_names=target_names, X_pca=X_pca, cols_to_plot=None)
 
 #test person to plot where he should move
@@ -123,7 +96,10 @@ viz.visualize_similar_with_names(data, orig_name='Otaniemi', comparison_names=na
 
 
 map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Jyväskylä Keskus', range_km=100,
-                                     how='intersection', d=d, target_names=target_names, n_most=15)
+                                     how='intersection', n_most=15, pipe=pipe)
 
 map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
-                                     how='difference', d=d, target_names=target_names, n_most=15)
+                                     how='intersection', n_most=15, pipe=pipe)
+
+map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
+                                     how='difference', n_most=15, pipe=pipe)
