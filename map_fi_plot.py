@@ -132,7 +132,7 @@ def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018)
     show(p)
 
 
-def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pipe):
+def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pipe, figsize=(12, 10)):
     methods = ['intersection', 'difference']
     if how not in methods:
         raise ValueError('how should be either "intersection" or "difference"')
@@ -162,5 +162,5 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pip
     similar = similarity.get_similar_in_geo_area(included, orig_name, d,
                                                  target_names, n_most)
     #included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
-    map_with_highlights_names(data, '', orig_name, similar, 2018, area=area)
+    map_with_highlights_names(data, '', orig_name, similar, 2018, area=area, figsize=figsize)
 
