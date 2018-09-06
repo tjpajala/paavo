@@ -1,0 +1,16 @@
+__pycache__*
+test.html
+toolbar.html
+*.csv
+*.shx
+*.shp
+*.dbf
+*.prj
+*.cst
+.DS_Store
+.idea*
+.idea/inspectionProfiles/Project_Default.xml
+fac_plot
+fac_abs_plot
+pca_vars.numbers
+load_data.py
