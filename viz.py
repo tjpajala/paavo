@@ -49,7 +49,7 @@ def plot_correlations(data):
 def get_pca_cols(data):
     cols = [c for c in data.columns.values if c not in ['pono', 'vuosi', 'nimi', 'pono.level', 'rakennukset_bin',
                                                         'kunta', 'kuntanro', 'pinta_ala', 'geometry', 'posti_alue',
-                                                        'posti_aluenro']]
+                                                        'posti_aluenro', 'hinta']]
     cols.sort()
     return cols
 

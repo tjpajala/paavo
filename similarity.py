@@ -78,3 +78,6 @@ def get_similar_in_geo_area(included_area, orig_name, d, target_names, n_most):
     similar = [x for x in similar if x in included_area.nimi.tolist()][0:n_most]
     return similar
 
+
+def filter_w_price(data, max_price, including_names=[]):
+    return data.loc[(data['hinta']<max_price) | (data['nimi'].isin(including_names)), :]

@@ -66,18 +66,19 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     plt.title(title)
+    pol = gp.GeoDataFrame.from_file('pno_' + str(year) + '.shp')
     df = merge_to_polygons_for_year(dataframe, year)
     if origin_idx is None:
         origin_idx = np.random.choice(range(len(df)), size=1, replace=False).min()
     else:
-        origin_idx = df.loc[df['posti_alue'] == dataframe.iloc[origin_idx, :]['pono'], :].index.tolist()[0]
+        origin_idx = df.loc[df['posti_alue'] == dataframe.loc[origin_idx, :]['pono'], :].index.tolist()[0]
     df_origin = df.iloc[[origin_idx], :]  #pass list to retain it as dataframe
     if highlights_idx is None:
         highlights_idx = np.random.choice(range(len(df)), size=15, replace=False)
     else:
-        highlights_idx = df.loc[df['posti_alue'].isin(dataframe.iloc[highlights_idx, :]['pono']), :].index.tolist()
+        highlights_idx = df.loc[df['posti_alue'].isin(dataframe.loc[highlights_idx, :]['pono']), :].index.tolist()
     df_highlights = df.iloc[highlights_idx, :]
-    df.plot(facecolor='none', edgecolor="grey", alpha=0.1, ax=ax)
+    pol.plot(facecolor='none', edgecolor="grey", alpha=0.1, ax=ax)
     if area is not None:
         area.plot(facecolor='none', edgecolor='purple', alpha=0.3, ax=ax)
     df_origin.plot(facecolor='red', ax=ax)

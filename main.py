@@ -35,12 +35,19 @@ for column_to_impute in data.columns.values:
             impute_with_class_mean(data, column_to_impute)
 
 
+
 #does mean exist for each variable and class?
 #data_transforms.check_class_means(data)
 viz.missing_plot(data)
 
 #select only one year
 data = data.loc[data['vuosi'] == 2018, :]
+
+#get price data from kannattaako_kauppa
+a = from_r_gen.get_price_data(data)
+if (data['pono'] == a['pono']).all():
+    data['hinta'] = a['price']
+
 
 X, y, target_names = viz.get_pca_data(data, 2018, 5)
 target_names.index = range(len(target_names))
@@ -62,13 +69,16 @@ d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
 names = similarity.get_n_most_similar_with_name("Otaniemi", d, target_names, 10)
 print(names)
 
+
+
+
 data_l5 = data.loc[data['pono.level'] == 5, :].assign(max_factor=pd.DataFrame(X_pca.argmax(axis=1)))
 map_fi_plot.map_fi_postinumero(data_l5, "Highest factors per area", color_var='max_factor')
 
 map_fi_plot.map_with_highlights_names(data_l5, "How similar to Vattuniemi?", 'Vattuniemi',
                                       similarity.get_n_most_similar_with_name('Vattuniemi', d, target_names, 15))
 map_fi_plot.map_with_highlights_names(data_l5, "How similar to Otaniemi?", 'Otaniemi',
-                                      similarity.get_n_most_similar_with_name('Otaniemi', d, target_names, 15))
+                                      similarity.get_n_most_similar_with_name('Otaniemi', d, target_names, 10))
 names = similarity.get_n_most_similar_with_name("Otaniemi", d, target_names, 10)
 print(names)
 viz.visualize_similar_with_names(data, orig_name='Vattuniemi', comparison_names=names,
@@ -102,4 +112,8 @@ map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattu
                                      how='intersection', n_most=15, pipe=pipe)
 
 map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
+                                     how='difference', n_most=15, pipe=pipe)
+
+#with price filter
+map_fi_plot.plot_similar_in_geo_area(similarity.filter_w_price(data, 4000, including_names=['Vattuniemi']), orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
                                      how='difference', n_most=15, pipe=pipe)
