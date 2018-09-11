@@ -144,16 +144,7 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pip
         raise ValueError('origin_name not in data!')
     if target not in list(df['nimi_x']):
         raise ValueError('target not in data!')
-    #range expressed in kms
-    #limit in shapely units
-    limit = range_km*1000
-    area = gp.GeoDataFrame()
-    area['geometry'] = df.loc[df['nimi_x'] == target, 'geometry'].buffer(limit)
-    area.crs = df.crs
-    included = gp.overlay(df, area, how=how)
-    included = included.append(df.loc[df['nimi_x']==orig_name, :], sort=True)
-    included.drop(labels=['vuosi_y', 'nimi_y', 'posti_alue', 'posti_aluenro'], axis=1, inplace=True)
-    included.rename(index=str, columns={'posti_alue':'pono','nimi_x':'nimi', 'vuosi_x':'vuosi'}, inplace=True)
+    area, included = get_included_area(df, how, orig_name, range_km, target)
     X, y, target_names = viz.get_pca_data(included, 2018, 5)
     target_names.index = range(len(target_names))
     X_pca = pipe.transform(X)
@@ -164,4 +155,18 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pip
                                                  target_names, n_most)
     #included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
     map_with_highlights_names(data, '', orig_name, similar, 2018, area=area, figsize=figsize)
+
+
+def get_included_area(df, how, orig_name, range_km, target):
+    # range expressed in kms
+    # limit in shapely units
+    limit = range_km * 1000
+    area = gp.GeoDataFrame()
+    area['geometry'] = df.loc[df['nimi_x'] == target, 'geometry'].buffer(limit)
+    area.crs = df.crs
+    included = gp.overlay(df, area, how=how)
+    included = included.append(df.loc[df['nimi_x'] == orig_name, :], sort=True)
+    included.drop(labels=['posti_alue', 'posti_aluenro', 'vuosi_x', 'nimi_x'], axis=1, inplace=True)
+    included.rename(index=str, columns={'posti_alue': 'pono'}, inplace=True)
+    return area, included
 

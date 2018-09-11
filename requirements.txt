@@ -1,3 +1,5 @@
+plotly
+dash
 ipywidgets
 bokeh
 seaborn
