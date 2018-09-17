@@ -81,3 +81,24 @@ def get_similar_in_geo_area(included_area, orig_name, d, target_names, n_most):
 
 def filter_w_price(data, max_price, including_names=[]):
     return data.loc[(data['hinta']<max_price) | (data['nimi'].isin(including_names)), :]
+
+
+def variable_to_ranks(df, col_name, bins=5):
+    return pd.cut(df.loc[:, col_name].rank(), bins=bins, labels=range(1, bins+1))
+
+
+def full_df_to_ranks(df, bins=5):
+    nonnumeric_columns = ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
+                          'dist', 'rakennukset_bin']
+    for col in df.columns:
+        if col not in nonnumeric_columns:
+            df.loc[:, col] = variable_to_ranks(df, col, bins=bins)
+    return df
+
+
+def value_to_icon(rank, col_name):
+    prefix='./icons/'
+    icon=''
+    if col_name=='ra_asunn':
+        icon = 'house.svg'
+    return prefix+icon

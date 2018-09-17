@@ -287,7 +287,6 @@ app.layout = html.Div([
                 type='number',
                 value=10
             ),
-            html.Br(),
             dcc.Graph(id='comparison-table')
             ],
             style={'width': '35%', 'display': 'inline-block'}),
@@ -326,16 +325,28 @@ def update_table(origin_name, move_type,
                                                  target_names, n_most)
     tb = viz.table_similar_with_names(included, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika','ra_asunn','te_laps','te_as_valj','tp_tyopy','tr_mtu'], tail=False)
     tb = tb.drop_duplicates()
+    #format to .2f (not needed when ranks)
+    #tb = format_numeric_table_cols(tb)
 
-    tb = format_numeric_table_cols(tb)
+    #transform values to ranks for easy understanding
+    tb = similarity.full_df_to_ranks(tb, bins=10)
+    tb = format_numeric_table_cols(tb, numcols=['dist'])
+
     trace = go.Table(
-        header=dict(values=list(['pono','nimi','he_kika','dist']),
+        header=dict(values=list(['Pono','Nimi','Keski-ikä', 'Asunnot', 'Lapsitaloudet', 'Asumisvälj.','Työpaikat','Mediaanitulo', 'Dist']),
                     fill = dict(color='#C2D4FF'),
                     align = ['left'] * 4),
-        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.dist],
+        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.ra_asunn, tb.te_laps, tb.te_as_valj, tb.tp_tyopy, tb.tr_mtu, tb.dist],
                    fill = dict(color='#F5F8FF'),
                    align = ['left'] * 4))
-    return {'data': [trace]
+    return {'data': [trace],
+            'layout': dict(autosize=True, margin=dict(
+                               t=0,
+                               b=0,
+                               r=0,
+                               l=0
+                           )
+                           )
             }
 
     # return html.Table(
