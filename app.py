@@ -1,3 +1,5 @@
+import json
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -6,6 +8,7 @@ import geopandas as gp
 import plotly.graph_objs as go
 import plotly.offline as py
 import numpy as np
+import pickle
 
 import map_fi_plot
 import viz
@@ -68,7 +71,7 @@ def make_graph_data(df, fill_color='white', hover=True):
                 type = 'scatter',
                 showlegend = False,
                 legendgroup = "shapes",
-                line = dict(color='grey', width=0.5),
+                line = dict(color='grey', width=0.2),
                 x=xs,
                 y=ys,
                 fill='toself',
@@ -82,12 +85,24 @@ def make_graph_data(df, fill_color='white', hover=True):
                 legendgroup = "centroids",
                 name = '',
                 text = row.nimi,
-                marker = dict(size=2, color='red', opacity=0.2),
+                marker = dict(size=2, color='red', opacity=0),
                 x=x_centroids,
                 y=y_centroids,
-                fill='none',
+                mode="markers",
+                fill='none'
+        )
+        annotation = dict(
+            type = 'scatter',
+            showlegend=False,
+            x=x_centroids,
+            y=y_centroids,
+            text='',
+            mode='text',
+            hoverinfo='none',
+            textposition='bottom center'
         )
         plot_data4.append(county_outline)
+        plot_data4.append(annotation)
         if hover:
             plot_data4.append(hover_point)
 
@@ -105,7 +120,7 @@ def define_layout():
             #range=[coords_max['minx'], coords_max['maxx']],
             showgrid = True,
             zeroline = False,
-            showticklabels=True,
+            showticklabels=False,
             ticks='outside',
             domain=[0.1, 0.9],
             fixedrange=False
@@ -115,7 +130,7 @@ def define_layout():
             #range=[coords_max['miny'], coords_max['maxy']],
             showgrid = True,
             zeroline = False,
-            showticklabels=True,
+            showticklabels=False,
             ticks='outside',
             fixedrange=False,
             scaleanchor='x',
@@ -128,11 +143,12 @@ def define_layout():
             r=0,
             l=0
         ),
-        width = 450,
-        height = 900,
+        width = 900,
+        height = 2*450,
         dragmode = 'select'
     )
     return layout
+
 
 
 df = pd.read_csv('data_to_plotly.csv', dtype={
@@ -188,8 +204,12 @@ X, y, target_names = viz.get_pca_data(df, 2018, 5)
 target_names.index = range(len(target_names))
 X_pca, pipe = viz.do_pca(X, 5)
 
-plot_data4 = make_graph_data(df)
+#plot_data4 = make_graph_data(df)
+#with open('plotly_plot_data4', 'wb') as f:
+#    pickle.dump(plot_data4, f)
 
+with open('plotly_plot_data4', 'rb') as f:
+    data_pickle = pickle.load(f)
 
 df2 = pd.read_csv('https://gist.githubusercontent.com/chriddyp/cb5392c35661370d95f300086accea51/raw/8e0768211f6b747c0db42a9ce9a0937dafcbd8b2/indicators.csv')
 available_indicators = df2['Indicator Name'].unique()
@@ -198,47 +218,15 @@ pono_name_dict = dict(zip(df.sort_values(by='pono').pono + ' ' + df.sort_values(
                           df.sort_values(by='pono').nimi))
 app.layout = html.Div([
     html.Div([
-
         html.Div([
-            html.P('What price per sq. meter can you accept at max?', style={'display': 'inline-block'}),
-            dcc.Slider(
-                id='price-slider',
-                min=df['hinta'].min(),
-                max=df['hinta'].max(),
-                value=df['hinta'].max(),
-                step=1000,
-                marks={0: 0,
-                       1000: 1000,
-                       2000: 2000,
-                       3000: 3000,
-                       4000: 4000,
-                       5000: 5000
-                       },
-                included=True
-            ),
-            html.P('How many alternatives do you want:', style={'display': 'inline-block'}),
-            dcc.Input(
-                id='nmost-input',
-                inputmode='numeric',
-                min=3,
-                max=30,
-                step=1,
-                type='number',
-                value=10
-            ),
-            html.Br(),
-            html.P('Select current area:', style={'display': 'inline-block'}),
+            html.P('Select origin area:', style={'display': 'inline-block'}),
             dcc.Dropdown(
                 id='origin-area',
                 options=[{'label': key, 'value': pono_name_dict.get(key)} for key in pono_name_dict.keys()],
                 value=pono_name_dict.get(list(pono_name_dict.keys())[0]),
                 searchable=True,
                 placeholder='Select your current postcode area'
-            )
-            ],
-            style={'width': '48%', 'display': 'inline-block'}),
-
-        html.Div([
+            ),
             html.P('Select move type:', style={'display': 'inline-block'}),
             dcc.RadioItems(
                 id='move-type',
@@ -252,7 +240,7 @@ app.layout = html.Div([
                 min=20,
                 max=500,
                 step=10,
-                value=100,
+                value=50,
                 marks={30: 30,
                        100: 100,
                        150: 150,
@@ -261,25 +249,111 @@ app.layout = html.Div([
                        300: 300,
                        350: 350,
                        400: 400,
-                       450: 450},
+                       450: '450 km'},
                 included=True
             ),
+
             html.P('Select target area:', style={'display': 'inline-block'}),
             dcc.Dropdown(
                 id='target-area',
-                options=[{'label':key, 'value':pono_name_dict.get(key)} for key in pono_name_dict.keys()],
+                options=[{'label': key, 'value': pono_name_dict.get(key)} for key in pono_name_dict.keys()],
                 value=pono_name_dict.get(list(pono_name_dict.keys())[0]),
                 searchable=True,
                 placeholder='Select your target postcode area'
-            )
-        ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-    ], style={'display': 'flex', 'align-items': 'flex-end', 'justify-content': 'space-around'}),
+            ),
+            html.P('What price per sq. meter can you accept at max?', style={'display': 'inline-block'}),
+            dcc.Slider(
+                id='price-slider',
+                min=df['hinta'].min(),
+                max=df['hinta'].max(),
+                value=df['hinta'].max(),
+                step=1000,
+                marks={0: 0,
+                       1000: '1000',
+                       2000: '2000',
+                       3000: '3000',
+                       4000: '4000',
+                       5000: '5000 €'
+                       },
+                included=True
+            ),
+            html.P('How many alternatives do you want: ', style={'display': 'inline-block'}),
+            dcc.Input(
+                id='nmost-input',
+                inputmode='numeric',
+                min=3,
+                max=30,
+                step=1,
+                type='number',
+                value=10
+            ),
+            html.Br(),
+            dcc.Graph(id='comparison-table')
+            ],
+            style={'width': '35%', 'display': 'inline-block'}),
 
-    dcc.Graph(id='indicator-graphic'),
+        html.Div([
+            dcc.Graph(id='indicator-graphic'),
+
+        ], style={'width': '65%', 'float': 'right', 'display': 'inline-block'})
+    ], style={'display': 'flex', 'align-items': 'flex-start', 'justify-content': 'space-around'}),
+
+
 
 
 ], )
+@app.callback(
+    dash.dependencies.Output('comparison-table', 'figure'),
+    [dash.dependencies.Input('origin-area', 'value'),
+     dash.dependencies.Input('move-type', 'value'),
+     dash.dependencies.Input('range-km-slider', 'value'),
+     dash.dependencies.Input('nmost-input', 'value'),
+     dash.dependencies.Input('price-slider', 'value'),
+     dash.dependencies.Input('target-area', 'value')])
+def update_table(origin_name, move_type,
+                 range_km, n_most,
+                 max_price, target):
+    df_filtered = similarity.filter_w_price(df, max_price, [origin_name, target])
+    df_origin = df.loc[df['nimi'] == origin_name, :]
+    if move_type == 'difference':
+        target = origin_name
+    area, included = map_fi_plot.get_included_area(df_filtered, move_type, origin_name, range_km, target)
+    X, y, target_names = viz.get_pca_data(included, 2018, 5)
+    target_names.index = range(len(target_names))
+    X_pca = pipe.transform(X)
+    d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
+    similar = similarity.get_similar_in_geo_area(included, origin_name, d,
+                                                 target_names, n_most)
+    tb = viz.table_similar_with_names(included, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika','ra_asunn','te_laps','te_as_valj','tp_tyopy','tr_mtu'], tail=False)
+    tb = tb.drop_duplicates()
 
+    tb = format_numeric_table_cols(tb)
+    trace = go.Table(
+        header=dict(values=list(['pono','nimi','he_kika','dist']),
+                    fill = dict(color='#C2D4FF'),
+                    align = ['left'] * 4),
+        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.dist],
+                   fill = dict(color='#F5F8FF'),
+                   align = ['left'] * 4))
+    return {'data': [trace]
+            }
+
+    # return html.Table(
+    #     # Header
+    #     [html.Tr([html.Th(col) for col in tb.columns])] +
+    #
+    #     # Body
+    #     [html.Tr([
+    #         html.Td(tb.iloc[i][col]) for col in tb.columns
+    #     ]) for i in range(min(len(tb), len(tb)))]
+    # )
+
+
+def format_numeric_table_cols(tb, numcols=None):
+    if numcols is None:
+        numcols = tb.columns.values[(tb.columns.values != "nimi") & (tb.columns.values != 'pono')]
+    tb.loc[:, numcols] = tb.loc[:, numcols].applymap("{0:.2f}".format)
+    return tb
 
 @app.callback(
     dash.dependencies.Output('indicator-graphic', 'figure'),
@@ -294,6 +368,8 @@ def update_graph(origin_name, move_type,
                  max_price, target):
     df_filtered = similarity.filter_w_price(df, max_price, [origin_name, target])
     df_origin = df.loc[df['nimi'] == origin_name, :]
+    if move_type == 'difference':
+        target=origin_name
     area, included = map_fi_plot.get_included_area(df_filtered, move_type, origin_name, range_km, target)
     X, y, target_names = viz.get_pca_data(included, 2018, 5)
     target_names.index = range(len(target_names))
@@ -320,16 +396,20 @@ def update_graph(origin_name, move_type,
 
 def set_fill_colors_for_origin_and_comp(plot_data4, origin_name, similar, target):
     #reset colors to white
-    all_idx = range(0, len(plot_data4), 2)
+    all_idx = range(0, len(plot_data4), 3)
     for idx in all_idx:
         plot_data4[idx]['fillcolor'] = 'white'
-    origin_idx = [x for x in range(1, len(plot_data4), 2) if plot_data4[x]['text']==origin_name][0]
-    plot_data4[origin_idx-1]['fillcolor'] = 'red'
-    comp_idx = [x for x in range(1, len(plot_data4), 2) if plot_data4[x]['text'] in similar]
+        plot_data4[idx+1]['text'] = ''
+    origin_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text']==origin_name][0]
+    plot_data4[origin_idx-2]['fillcolor'] = 'red'
+    plot_data4[origin_idx-1]['text'] = plot_data4[origin_idx]['text']
+    comp_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text'] in similar]
     for idx in comp_idx:
-        plot_data4[idx-1]['fillcolor'] = 'orange'
-    target_idx = [x for x in range(1, len(plot_data4), 2) if plot_data4[x]['text']==target][0]
-    plot_data4[target_idx - 1]['fillcolor'] = 'purple'
+        plot_data4[idx-2]['fillcolor'] = 'orange'
+        plot_data4[idx - 1]['text'] = plot_data4[idx]['text']
+    target_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text']==target][0]
+    plot_data4[target_idx - 2]['fillcolor'] = 'purple'
+    plot_data4[target_idx - 1]['text'] = 'Target: '+plot_data4[target_idx]['text']
     return plot_data4
 
 

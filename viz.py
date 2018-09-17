@@ -157,20 +157,26 @@ def missing_plot(data):
     plt.show()
 
 
-def table_similar_with_names(data, orig_name, comparison_names, target_names, X_pca, cols):
+def table_similar_with_names(data, orig_name, comparison_names, target_names, X_pca, cols, tail=False):
     orig_idx = (target_names == orig_name).idxmax()
     comp_idx = target_names[target_names.isin(comparison_names)].index.tolist()
-    all_names = comparison_names.tolist()
+    all_names = list(comparison_names)
     all_names.append(orig_name)
+
     if cols is None:
         cols = ['nimi'] + data_transforms.NOMINAL_VARS + ['dist']
+    else:
+        cols = ['nimi'] + cols + ['dist']
     d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
     df = data.copy()
     df['dist'] = d[orig_idx, :]
     df.sort_values(by='dist', ascending=True, inplace=True)
-    last = df.tail(5)
     df = df.loc[df['nimi'].isin(all_names), cols]
-    df = df.append(last.loc[:, cols])
+    if tail:
+        last = df.tail(5)
+        df = df.append(last.loc[:, cols])
+    df = df.loc[:, cols]
+    df = df.T.drop_duplicates().T
     return df
 
 

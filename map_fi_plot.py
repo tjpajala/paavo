@@ -167,6 +167,6 @@ def get_included_area(df, how, orig_name, range_km, target):
     included = gp.overlay(df, area, how=how)
     included = included.append(df.loc[df['nimi_x'] == orig_name, :], sort=True)
     included.drop(labels=['posti_alue', 'posti_aluenro', 'vuosi_x', 'nimi_x'], axis=1, inplace=True)
-    included.rename(index=str, columns={'posti_alue': 'pono'}, inplace=True)
+    included.rename(index=str, columns={'posti_alue': 'pono', 'vuosi_y': 'vuosi', 'nimi_y':'nimi'}, inplace=True)
     return area, included
 
