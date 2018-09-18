@@ -223,10 +223,10 @@ def round_pono(pono, level):
     return pono - pono % div
 
 
-def impute_with_class_mean(data, column_to_impute):
+def impute_with_class_mean(data, column_to_impute, based_on='rakennukset_bin'):
     if column_to_impute not in ['pono', 'pono.level', 'vuosi', 'nimi']:
         df = data.drop(labels=['pono', 'pono.level', 'vuosi', 'nimi'], axis=1)
-        val_table = df.groupby(by='rakennukset_bin')[column_to_impute].describe()['mean']
+        val_table = df.groupby(by=based_on)[column_to_impute].describe()['mean']
         data_predict = df.loc[df[column_to_impute].isnull(), :]
 
         return [val_table[row.rakennukset_bin] for index, row in data_predict.iterrows()]
@@ -271,5 +271,17 @@ def merge_and_clean_data(data, data2):
                  'te_elak', 'te_omis_as', 'te_vuok_as', 'te_takk', 'te_as_valj']
     for c in to_format:
         data[c] = [float(str(x).replace(",", ".")) for x in data[c]]
-    data['rakennukset_bin'] = pd.cut(data['ra_asrak'], 5, retbins=False, labels=False)
+    cut_to_bins(data, 'ra_asrak', 'rakennukset_bin')
     return data
+
+
+def cut_to_bins(data, col_base, new_col_name):
+    data[new_col_name] = pd.cut(data[col_base], 5, retbins=False, labels=False)
+    return data
+
+
+def get_edu_data():
+    edu = pd.read_csv('education.csv', sep=";", dtype={'Yliopistot': 'O', 'AMK': 'O'}, usecols=['Yliopistot', 'AMK'])
+    amk = edu.AMK.value_counts()
+    yliop = edu.Yliopistot.value_counts()
+    return amk, yliop

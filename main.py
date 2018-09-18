@@ -26,13 +26,21 @@ data = data_transforms.merge_and_clean_data(data, data2)
 data_agg = data.loc[data["pono.level"] != 5, :]
 data = data.loc[data['pono.level'] == 5, :]
 
+#set yliopistot and amk
+amk, yl = data_transforms.get_edu_data()
+data['yliopistot'] = [yl[x] if x in yl else 0 for x in data.pono]
+data['amk'] = [amk[x] if x in amk else 0 for x in data.pono]
+
+#set rakennukset_bin again, so that it is more fine-grained
+data = data_transforms.cut_to_bins(data, 'ra_asrak', 'rakennukset_bin')
+
 viz.missing_plot(data)
 #data.fillna(0, inplace=True)
 #data.fillna(data.mean(), inplace=True)
 for column_to_impute in data.columns.values:
     if column_to_impute not in ['pono', 'pono.level', 'vuosi', 'nimi']:
         data.loc[data[column_to_impute].isnull(), column_to_impute] = data_transforms.\
-            impute_with_class_mean(data, column_to_impute)
+            impute_with_class_mean(data, column_to_impute, based_on='rakennukset_bin')
 
 
 
@@ -111,9 +119,22 @@ map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Jyvä
 map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
                                      how='intersection', n_most=15, pipe=pipe)
 
-map_fi_plot.plot_similar_in_geo_area(data, orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
+map_fi_plot.plot_similar_in_geo_area(data, orig_name='Otaniemi', target='Otaniemi', range_km=100,
                                      how='difference', n_most=15, pipe=pipe)
 
 #with price filter
 map_fi_plot.plot_similar_in_geo_area(similarity.filter_w_price(data, 4000, including_names=['Vattuniemi']), orig_name='Vattuniemi', target='Vattuniemi', range_km=100,
                                      how='difference', n_most=15, pipe=pipe)
+
+
+
+cols = [x for x in data.columns.values if x not in ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
+                          'dist', 'rakennukset_bin']]
+
+data = data_transforms.cut_to_bins(data, 'he_naiset', 'naiset_bin')
+data.groupby(by='naiset_bin').describe().loc[:,'mean']
+
+import matplotlib.pyplot as plt
+for c in cols:
+    data.loc[:, c].plot(kind="hist", title=c)
+    plt.show()

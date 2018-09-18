@@ -1,5 +1,3 @@
-import json
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -13,6 +11,7 @@ import pickle
 import map_fi_plot
 import viz
 import similarity
+import data_transforms
 
 app = dash.Dash()
 
@@ -150,6 +149,12 @@ def define_layout():
     return layout
 
 
+def format_numeric_table_cols(tb, numcols=None):
+    if numcols is None:
+        numcols = tb.columns.values[(tb.columns.values != "nimi") & (tb.columns.values != 'pono')]
+    tb.loc[:, numcols] = tb.loc[:, numcols].applymap("{0:.2f}".format)
+    return tb
+
 
 df = pd.read_csv('data_to_plotly.csv', dtype={
      'pono': 'O',
@@ -194,12 +199,19 @@ df = pd.read_csv('data_to_plotly.csv', dtype={
      'tr_ke_tul': 'float64',
      'tr_pi_tul': 'float64',
      'rakennukset_bin': 'float64',
-     'hinta': 'int64'})
+     'hinta': 'int64',
+     'yliopistot': 'int64',
+     'amk': 'int64'})
 
 df.drop(labels='Unnamed: 0', axis=1, inplace=True)
 df = map_fi_plot.merge_to_polygons_for_year(df, 2018)
 #df.drop(labels=['vuosi_y', 'nimi_y'], axis=1, inplace=True)
 df = df.rename(index=str, columns={'vuosi_y': 'vuosi', 'nimi_y': 'nimi'})
+#get uni data
+#amk, yl = data_transforms.get_edu_data()
+#df['yliopistot'] = [yl[x] if x in yl else 0 for x in df.pono]
+#df['amk'] = [amk[x] if x in amk else 0 for x in df.pono]
+
 X, y, target_names = viz.get_pca_data(df, 2018, 5)
 target_names.index = range(len(target_names))
 X_pca, pipe = viz.do_pca(X, 5)
@@ -211,8 +223,6 @@ X_pca, pipe = viz.do_pca(X, 5)
 with open('plotly_plot_data4', 'rb') as f:
     data_pickle = pickle.load(f)
 
-df2 = pd.read_csv('https://gist.githubusercontent.com/chriddyp/cb5392c35661370d95f300086accea51/raw/8e0768211f6b747c0db42a9ce9a0937dafcbd8b2/indicators.csv')
-available_indicators = df2['Indicator Name'].unique()
 
 pono_name_dict = dict(zip(df.sort_values(by='pono').pono + ' ' + df.sort_values(by='pono').nimi,
                           df.sort_values(by='pono').nimi))
@@ -323,22 +333,31 @@ def update_table(origin_name, move_type,
     d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
     similar = similarity.get_similar_in_geo_area(included, origin_name, d,
                                                  target_names, n_most)
-    tb = viz.table_similar_with_names(included, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika','ra_asunn','te_laps','te_as_valj','tp_tyopy','tr_mtu'], tail=False)
+    tb = viz.table_similar_with_names(included, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika',
+                                                                                            'ra_asunn','te_laps',
+                                                                                            'te_as_valj','tp_tyopy',
+                                                                                            'tr_mtu', 'yliopistot', 'amk'],
+                                      tail=False)
     tb = tb.drop_duplicates()
-    #format to .2f (not needed when ranks)
-    #tb = format_numeric_table_cols(tb)
-
+    
     #transform values to ranks for easy understanding
     tb = similarity.full_df_to_ranks(tb, bins=10)
     tb = format_numeric_table_cols(tb, numcols=['dist'])
+    cols = [x for x in tb.columns.values if x not in ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
+                          'dist', 'rakennukset_bin']]
+    #tb.loc[:, cols] = tb.loc[:, cols].applymap(lambda x: similarity.value_to_plusses(x))
 
     trace = go.Table(
-        header=dict(values=list(['Pono','Nimi','Keski-ikä', 'Asunnot', 'Lapsitaloudet', 'Asumisvälj.','Työpaikat','Mediaanitulo', 'Dist']),
-                    fill = dict(color='#C2D4FF'),
-                    align = ['left'] * 4),
-        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.ra_asunn, tb.te_laps, tb.te_as_valj, tb.tp_tyopy, tb.tr_mtu, tb.dist],
-                   fill = dict(color='#F5F8FF'),
-                   align = ['left'] * 4))
+        header=dict(values=list(['Pono','Nimi','Keski-ikä', 'Asunnot', 'Lapsitaloudet', 'Työpaikat','Mediaanitulo', 'Yliopistot', 'AMK' ,'Dist']),
+                    fill=dict(color='#C2D4FF'),
+                    align=['left'] * 5,
+                    height=40),
+        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.ra_asunn, tb.te_laps, tb.tp_tyopy, tb.tr_mtu, tb.yliopistot, tb.amk, tb.dist],
+                   fill=dict(color='#F5F8FF'),
+                   align=['left'] * 5,
+                   height=30)
+    )
+    #py.plot([trace], 'test.html')
     return {'data': [trace],
             'layout': dict(autosize=True, margin=dict(
                                t=0,
@@ -360,11 +379,6 @@ def update_table(origin_name, move_type,
     # )
 
 
-def format_numeric_table_cols(tb, numcols=None):
-    if numcols is None:
-        numcols = tb.columns.values[(tb.columns.values != "nimi") & (tb.columns.values != 'pono')]
-    tb.loc[:, numcols] = tb.loc[:, numcols].applymap("{0:.2f}".format)
-    return tb
 
 @app.callback(
     dash.dependencies.Output('indicator-graphic', 'figure'),

@@ -102,3 +102,7 @@ def value_to_icon(rank, col_name):
     if col_name=='ra_asunn':
         icon = 'house.svg'
     return prefix+icon
+
+
+def value_to_plusses(rank):
+    return rank*'*'
