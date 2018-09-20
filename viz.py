@@ -176,7 +176,7 @@ def table_similar_with_names(data, orig_name, comparison_names, target_names, X_
         last = df.tail(5)
         df = df.append(last.loc[:, cols])
     df = df.loc[:, cols]
-    df = df.T.drop_duplicates().T
+    df = df.iloc[:,~df.columns.duplicated()]
     return df
 
 

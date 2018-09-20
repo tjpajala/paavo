@@ -88,12 +88,13 @@ def variable_to_ranks(df, col_name, bins=5):
 
 
 def full_df_to_ranks(df, bins=5):
+    data = df.copy()
     nonnumeric_columns = ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
                           'dist', 'rakennukset_bin']
-    for col in df.columns:
+    for col in data.columns:
         if col not in nonnumeric_columns:
-            df.loc[:, col] = variable_to_ranks(df, col, bins=bins)
-    return df
+            data.loc[:, col] = variable_to_ranks(data, col, bins=bins)
+    return data
 
 
 def value_to_icon(rank, col_name):

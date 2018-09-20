@@ -323,25 +323,26 @@ def update_table(origin_name, move_type,
                  range_km, n_most,
                  max_price, target):
     df_filtered = similarity.filter_w_price(df, max_price, [origin_name, target])
+    #transform values to ranks for easy understanding
+    df_filtered_ranks = similarity.full_df_to_ranks(df_filtered, bins=10)
     df_origin = df.loc[df['nimi'] == origin_name, :]
     if move_type == 'difference':
         target = origin_name
     area, included = map_fi_plot.get_included_area(df_filtered, move_type, origin_name, range_km, target)
+    NA, included_ranks = map_fi_plot.get_included_area(df_filtered_ranks, move_type, origin_name, range_km, target)
     X, y, target_names = viz.get_pca_data(included, 2018, 5)
     target_names.index = range(len(target_names))
     X_pca = pipe.transform(X)
     d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
     similar = similarity.get_similar_in_geo_area(included, origin_name, d,
                                                  target_names, n_most)
-    tb = viz.table_similar_with_names(included, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika',
+    tb = viz.table_similar_with_names(included_ranks, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika',
                                                                                             'ra_asunn','te_laps',
                                                                                             'te_as_valj','tp_tyopy',
                                                                                             'tr_mtu', 'yliopistot', 'amk'],
                                       tail=False)
     tb = tb.drop_duplicates()
     
-    #transform values to ranks for easy understanding
-    tb = similarity.full_df_to_ranks(tb, bins=10)
     tb = format_numeric_table_cols(tb, numcols=['dist'])
     cols = [x for x in tb.columns.values if x not in ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
                           'dist', 'rakennukset_bin']]

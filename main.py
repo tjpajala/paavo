@@ -87,7 +87,7 @@ map_fi_plot.map_with_highlights_names(data_l5, "How similar to Vattuniemi?", 'Va
                                       similarity.get_n_most_similar_with_name('Vattuniemi', d, target_names, 15))
 map_fi_plot.map_with_highlights_names(data_l5, "How similar to Otaniemi?", 'Otaniemi',
                                       similarity.get_n_most_similar_with_name('Otaniemi', d, target_names, 10))
-names = similarity.get_n_most_similar_with_name("Otaniemi", d, target_names, 10)
+names = similarity.get_n_most_similar_with_name("Vattuniemi", d, target_names, 10)
 print(names)
 viz.visualize_similar_with_names(data, orig_name='Vattuniemi', comparison_names=names,
                                  target_names=target_names, X_pca=X_pca, cols_to_plot=None)
