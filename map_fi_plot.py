@@ -46,7 +46,6 @@ def merge_to_polygons_for_year(dataframe, year):
 
 
 def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cmap='summer', plot_cities=True):
-
     fig = plt.figure(figsize=(16, 16))
     ax = fig.add_subplot(111)
     plt.title(title)
@@ -62,7 +61,7 @@ def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cma
 
 
 def map_with_highlights(dataframe, title='', origin_idx=None,
-                        highlights_idx=None, year=2018, figsize=(16,16), area=None):
+                        highlights_idx=None, year=2018, figsize=(16, 16), area=None):
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     plt.title(title)
@@ -72,7 +71,7 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
         origin_idx = np.random.choice(range(len(df)), size=1, replace=False).min()
     else:
         origin_idx = df.loc[df['posti_alue'] == dataframe.loc[origin_idx, :]['pono'], :].index.tolist()[0]
-    df_origin = df.iloc[[origin_idx], :]  #pass list to retain it as dataframe
+    df_origin = df.iloc[[origin_idx], :]  # pass list to retain it as dataframe
     if highlights_idx is None:
         highlights_idx = np.random.choice(range(len(df)), size=15, replace=False)
     else:
@@ -92,7 +91,8 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     plt.show()
 
 
-def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16,16), area=None):
+def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16, 16),
+                              area=None):
     df = merge_to_polygons_for_year(dataframe, year)
     if origin_name not in list(df['nimi_x']):
         raise ValueError('origin_name not in data!')
@@ -108,9 +108,8 @@ def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=
 
 
 def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018):
-
     output_file('test.html')
-    df = merge_to_polygons_for_year(dataframe,year)
+    df = merge_to_polygons_for_year(dataframe, year)
 
     TOOLTIPS = [
         ("Postinumero:", "$pono"),
@@ -120,7 +119,7 @@ def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018)
     p = figure(plot_width=600, plot_height=1000, tooltips=TOOLTIPS,
                title="Mouse over the dots")
 
-    df_origin = df.loc[df['nimi_x']==origin_name, :]
+    df_origin = df.loc[df['nimi_x'] == origin_name, :]
     df_highlights = df.loc[df['nimi_x'].isin(highlights), :]
 
     glyph_orig = Patches(xs="xs", ys="ys", fill_color="red")
@@ -150,10 +149,10 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pip
     X_pca = pipe.transform(X)
     d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
     s2 = similarity.get_n_most_similar_with_name(orig_name, d, target_names, n_most)
-    #idx = target_names.isin(included['nimi_x'].append(pd.Series(orig_name)))
+    # idx = target_names.isin(included['nimi_x'].append(pd.Series(orig_name)))
     similar = similarity.get_similar_in_geo_area(included, orig_name, d,
                                                  target_names, n_most)
-    #included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
+    # included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
     map_with_highlights_names(data, '', orig_name, similar, 2018, area=area, figsize=figsize)
 
 
@@ -167,6 +166,6 @@ def get_included_area(df, how, orig_name, range_km, target):
     included = gp.overlay(df, area, how=how)
     included = included.append(df.loc[df['nimi_x'] == orig_name, :], sort=True)
     included.drop(labels=['posti_alue', 'posti_aluenro', 'vuosi_x', 'nimi_x'], axis=1, inplace=True)
-    included.rename(index=str, columns={'posti_alue': 'pono', 'vuosi_y': 'vuosi', 'nimi_y':'nimi'}, inplace=True)
+    included.rename(index=str, columns={'posti_alue': 'pono', 'vuosi_y': 'vuosi', 'nimi_y': 'nimi'}, inplace=True)
+    #included.drop_duplicates(subset="pono", inplace=True)
     return area, included
-
