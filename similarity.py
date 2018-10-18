@@ -5,8 +5,8 @@ import pandas as pd
 import sklearn.metrics
 
 
-def pairwise_distances(X, Y, metric):
-    return sklearn.metrics.pairwise_distances(X, Y, metric)
+def pairwise_distances(x, y, metric):
+    return sklearn.metrics.pairwise_distances(x, y, metric)
 
 
 def name_to_matrix_row(target_names, name_to_search):
@@ -43,11 +43,11 @@ def get_similar_in_geo_area(included_area, orig_name, d, target_names, n_most):
 
 
 def filter_w_price(data, max_price, including_names=[]):
-    return data.loc[(data['hinta']<=max_price) | (data['nimi'].isin(including_names)), :]
+    return data.loc[(data['hinta'] <= max_price) | (data['nimi'].isin(including_names)), :]
 
 
 def variable_to_ranks(df, col_name, bins=5):
-    return pd.cut(df.loc[:, col_name].rank(), bins=bins, labels=range(1, bins+1))
+    return pd.cut(df.loc[:, col_name].rank(), bins=bins, labels=range(1, bins + 1))
 
 
 def full_df_to_ranks(df, bins=5):
@@ -61,4 +61,10 @@ def full_df_to_ranks(df, bins=5):
 
 
 def value_to_plusses(rank):
-    return rank*'*'
+    return rank * '*'
+
+
+def table_by_group(data, grouping_var, variable, metric):
+    if metric not in ["count", "mean", "std", "min", "25%", "50%", "75%", "max"]:
+        raise ValueError("Incorrect argument metric, acceptable values are: count, mean, std, min, 25%, 50%, 75%, max")
+    return data.groupby(by=grouping_var).describe().loc[:, variable].loc[:, metric]

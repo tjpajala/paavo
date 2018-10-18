@@ -5,6 +5,7 @@ import pytest
 import geopandas as gp
 import shapely.wkt
 
+
 @pytest.fixture()
 def get_sample_geodata():
     get_sample_geodata = pd.read_csv('./tests/test_data.csv', index_col=False).drop('Unnamed: 0', axis=1)
@@ -12,8 +13,8 @@ def get_sample_geodata():
 
 
 def test_merge_to_polygons_for_year(get_sample_geodata):
-    get_sample_geodata.loc[:,"pono"]=[str(x).rjust(5,'0') for x in get_sample_geodata.pono]
-    res=map_fi_plot.merge_to_polygons_for_year(get_sample_geodata,2018).iloc[0:2,0:5]
+    get_sample_geodata.loc[:, "pono"] = [str(x).rjust(5, '0') for x in get_sample_geodata.pono]
+    res = map_fi_plot.merge_to_polygons_for_year(get_sample_geodata, 2018).iloc[0:2, 0:5]
     df_res = pd.DataFrame({"posti_alue_x": ['00310', '00690'],
                            "nimi_x": ['Kivihaka', 'Tuomarinkylä-Torpparinmäki'],
                            "kunta_x": ['091', '091'],
@@ -22,21 +23,26 @@ def test_merge_to_polygons_for_year(get_sample_geodata):
                           index=[0, 1])
     assert (res == df_res).all().all()
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_map_fi_postinumero():
     assert False
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_map_with_highlights():
     assert False
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_map_with_highlights_names():
     assert False
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_bokeh_map():
     assert False
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_plot_similar_in_geo_area():
@@ -46,11 +52,13 @@ def test_plot_similar_in_geo_area():
 def test_get_included_area(get_sample_geodata):
     df = gp.GeoDataFrame(get_sample_geodata)
     df[['geometry']] = df.geometry.apply(shapely.wkt.loads)
-    area, included = map_fi_plot.get_included_area(df, how="intersection", orig_name="Vattuniemi",range_km=0, target="Vattuniemi")
+    area, included = map_fi_plot.get_included_area(df, how="intersection", orig_name="Vattuniemi", range_km=0,
+                                                   target="Vattuniemi")
     included.drop_duplicates(subset="pono", inplace=True)
-    included.loc[:, "pono"]=[str(x).rjust(5,'0') for x in included.pono]
-    assert included.pono.values=="00210"
-    area, included = map_fi_plot.get_included_area(df, how="difference", orig_name="Vattuniemi", range_km=10, target="Vattuniemi")
+    included.loc[:, "pono"] = [str(x).rjust(5, '0') for x in included.pono]
+    assert included.pono.values == "00210"
+    area, included = map_fi_plot.get_included_area(df, how="difference", orig_name="Vattuniemi", range_km=10,
+                                                   target="Vattuniemi")
     included.drop_duplicates(subset="pono", inplace=True)
     included.loc[:, "pono"] = [str(x).rjust(5, '0') for x in included.pono]
     array_res = np.array([

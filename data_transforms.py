@@ -224,12 +224,15 @@ def round_pono(pono, level):
 
 
 def impute_with_class_mean(data, column_to_impute, based_on='rakennukset_bin'):
-    if column_to_impute not in ['pono', 'pono.level', 'vuosi', 'nimi']:
-        df = data.drop(labels=['pono', 'pono.level', 'vuosi', 'nimi'], axis=1)
-        val_table = df.groupby(by=based_on)[column_to_impute].describe()['mean']
-        data_predict = df.loc[df[column_to_impute].isnull(), :]
+    ignore_cols = ['pono', 'pono.level', 'vuosi', 'nimi', 'posti_alue', 'nimi_x',
+                   'vuosi_x']
+    if column_to_impute not in ignore_cols:
+        if data.loc[data[column_to_impute].isnull(), :].shape[0] != 0:
+            df = data.drop(labels=['pono', 'pono.level', 'vuosi', 'nimi'], axis=1)
+            val_table = df.groupby(by=based_on)[column_to_impute].describe()['mean']
+            data_predict = df.loc[df[column_to_impute].isnull(), :]
 
-        return [val_table[row.rakennukset_bin] for index, row in data_predict.iterrows()]
+            return [val_table[row.rakennukset_bin] for index, row in data_predict.iterrows()]
     return []
 
 

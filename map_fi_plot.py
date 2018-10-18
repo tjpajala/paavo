@@ -8,6 +8,8 @@ from bokeh.models import GeoJSONDataSource
 from bokeh.models.glyphs import Patches
 from bokeh.plotting import figure, output_file, show
 
+default_figsize = (16, 16)
+
 CITIES = [
     'Helsinki Keskusta - Etu-Töölö',
     'Tampere Keskus',
@@ -34,6 +36,8 @@ CITIES = [
     'Kajaani Keskus'
 ]
 
+DEFAULT_FIGSIZE = (16, 16)
+
 
 def merge_to_polygons_for_year(dataframe, year):
     pol = gp.GeoDataFrame.from_file('pno_' + str(year) + '.shp')
@@ -46,7 +50,7 @@ def merge_to_polygons_for_year(dataframe, year):
 
 
 def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cmap='summer', plot_cities=True):
-    fig = plt.figure(figsize=(16, 16))
+    fig = plt.figure(figsize=DEFAULT_FIGSIZE)
     ax = fig.add_subplot(111)
     plt.title(title)
     df = merge_to_polygons_for_year(dataframe, year)
@@ -61,7 +65,7 @@ def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cma
 
 
 def map_with_highlights(dataframe, title='', origin_idx=None,
-                        highlights_idx=None, year=2018, figsize=(16, 16), area=None):
+                        highlights_idx=None, year=2018, figsize=DEFAULT_FIGSIZE, area=None):
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     plt.title(title)
@@ -91,8 +95,8 @@ def map_with_highlights(dataframe, title='', origin_idx=None,
     plt.show()
 
 
-def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018, figsize=(16, 16),
-                              area=None):
+def map_with_highlights_names(dataframe, title='', origin_name=None, highlights=None, year=2018,
+                              figsize=DEFAULT_FIGSIZE, area=None):
     df = merge_to_polygons_for_year(dataframe, year)
     if origin_name not in list(df['nimi_x']):
         raise ValueError('origin_name not in data!')
@@ -111,13 +115,13 @@ def bokeh_map(dataframe, title='', origin_name=None, highlights=None, year=2018)
     output_file('test.html')
     df = merge_to_polygons_for_year(dataframe, year)
 
-    TOOLTIPS = [
+    tooltips = [
         ("Postinumero:", "$pono"),
         ("(x,y)", "($euref_x, $euref_y)"),
     ]
 
-    p = figure(plot_width=600, plot_height=1000, tooltips=TOOLTIPS,
-               title="Mouse over the dots")
+    p = figure(plot_width=600, plot_height=1000, tooltips=tooltips,
+               title=title)
 
     df_origin = df.loc[df['nimi_x'] == origin_name, :]
     df_highlights = df.loc[df['nimi_x'].isin(highlights), :]
@@ -144,12 +148,10 @@ def plot_similar_in_geo_area(data, orig_name, target, range_km, how, n_most, pip
     if target not in list(df['nimi_x']):
         raise ValueError('target not in data!')
     area, included = get_included_area(df, how, orig_name, range_km, target)
-    X, y, target_names = viz.get_pca_data(included, 2018, 5)
+    x, y, target_names = viz.get_pca_data(included, 2018, 5)
     target_names.index = range(len(target_names))
-    X_pca = pipe.transform(X)
-    d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
-    s2 = similarity.get_n_most_similar_with_name(orig_name, d, target_names, n_most)
-    # idx = target_names.isin(included['nimi_x'].append(pd.Series(orig_name)))
+    x_pca = pipe.transform(x)
+    d = similarity.pairwise_distances(x_pca, x_pca, 'euclidean')
     similar = similarity.get_similar_in_geo_area(included, orig_name, d,
                                                  target_names, n_most)
     # included.plot(alpha=0.5, edgecolor='k', cmap='tab10')
@@ -165,7 +167,7 @@ def get_included_area(df, how, orig_name, range_km, target):
     area.crs = df.crs
     included = gp.overlay(df, area, how=how)
     included = included.append(df.loc[df['nimi_x'] == orig_name, :], sort=True)
-    included.drop(labels=['posti_alue', 'posti_aluenro', 'vuosi_x', 'nimi_x'], axis=1, inplace=True)
+    included.drop(labels=['posti_alue', 'vuosi_x', 'nimi_x'], axis=1, inplace=True)
     included.rename(index=str, columns={'posti_alue': 'pono', 'vuosi_y': 'vuosi', 'nimi_y': 'nimi'}, inplace=True)
-    #included.drop_duplicates(subset="pono", inplace=True)
+    # included.drop_duplicates(subset="pono", inplace=True)
     return area, included

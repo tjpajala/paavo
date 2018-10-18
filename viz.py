@@ -9,28 +9,6 @@ from sklearn.preprocessing import StandardScaler
 import data_transforms
 import similarity
 
-PCA_VARS = ['he_vakiy', 'he_naiset', 'he_miehet', 'he_kika',
-            'he_0_2', 'he_3_6', 'he_7_12', 'he_13_15', 'he_16_17', 'he_18_19',
-            'he_20_24', 'he_25_29', 'he_30_34', 'he_35_39', 'he_40_44',
-            'he_45_49', 'he_50_54', 'he_55_59', 'he_60_64', 'he_65_69',
-            'he_70_74', 'he_75_79', 'he_80_84', 'he_85_', 'ko_ika18y', 'ko_perus', 'ko_koul',
-            'ko_yliop', 'ko_ammat', 'ko_al_kork',
-            'ko_yl_kork', 'hr_tuy', 'hr_ktu', 'hr_mtu', 'hr_pi_tul',
-            'hr_ke_tul', 'hr_hy_tul', 'hr_ovy', 'te_taly', 'te_takk',
-            'te_as_valj', 'te_nuor', 'te_eil_np', 'te_laps', 'te_plap',
-            'te_aklap', 'te_klap', 'te_teini', 'te_aik', 'te_elak',
-            'te_omis_as', 'te_vuok_as', 'te_muu_as', 'tr_kuty', 'tr_ktu',
-            'tr_mtu', 'tr_pi_tul', 'tr_ke_tul', 'tr_hy_tul', 'tr_ovy', 'ra_ke',
-            'ra_raky', 'ra_muut', 'ra_asrak', 'ra_asunn', 'ra_as_kpa',
-            'ra_pt_as', 'ra_kt_as', 'tp_tyopy', 'tp_alku_a', 'tp_jalo_bf',
-            'tp_palv_gu', 'tp_a_maat', 'tp_b_kaiv', 'tp_c_teol', 'tp_d_ener',
-            'tp_e_vesi', 'tp_f_rake', 'tp_g_kaup', 'tp_h_kulj', 'tp_i_majo',
-            'tp_j_info', 'tp_k_raho', 'tp_l_kiin', 'tp_m_erik', 'tp_n_hall',
-            'tp_o_julk', 'tp_p_koul', 'tp_q_terv', 'tp_r_taid', 'tp_s_muup',
-            'tp_t_koti', 'tp_u_kans', 'tp_x_tunt', 'pt_vakiy', 'pt_tyovy',
-            'pt_tyoll', 'pt_tyott', 'pt_tyovu', 'pt_0_14', 'pt_opisk',
-            'pt_elakel', 'pt_muut']
-
 
 def plot_correlations(data):
     sns.set_style('white')
@@ -49,7 +27,7 @@ def plot_correlations(data):
 def get_pca_cols(data):
     cols = [c for c in data.columns.values if c not in ['pono', 'vuosi', 'nimi', 'pono.level', 'rakennukset_bin',
                                                         'kunta', 'kuntanro', 'pinta_ala', 'geometry', 'posti_alue',
-                                                        'posti_aluenro', 'hinta', 'nimi_x', 'vuosi_x']]
+                                                        'posti_aluenro', 'hinta', 'nimi_x', 'vuosi_x', 'naiset_bin']]
     cols.sort()
     return cols
 
@@ -65,10 +43,10 @@ def get_pca_data(data, year, pono_level):
         target_names.index = range(len(target_names))
     else:
         y = np.array([format(int(x), '05d') for x in
-                      round(data_to_pca.loc[:, ['pono']].astype(int), -5+pono_level)['pono']])
-        #format target names to leading zeros
+                      round(data_to_pca.loc[:, ['pono']].astype(int), -5 + pono_level)['pono']])
+        # format target names to leading zeros
         target_names = [format(int(x), '05d') for x in
-                        round(data_to_pca.loc[:, ['pono']].astype(int), -5+pono_level)['pono']]
+                        round(data_to_pca.loc[:, ['pono']].astype(int), -5 + pono_level)['pono']]
 
     X = np.array(data_to_pca.loc[:, cols])
 
@@ -84,7 +62,7 @@ def do_pca(X, n_components):
 def pca_2d_plot(X_pca, target_names, color):
     x0 = np.array([(i - min(X_pca[:, 0])) / (max(X_pca[:, 0]) - min(X_pca[:, 0])) for i in X_pca[:, 0]])
     y0 = np.array([(i - min(X_pca[:, 1])) / (max(X_pca[:, 1]) - min(X_pca[:, 1])) for i in X_pca[:, 1]])
-    #plt.interactive(False)
+    # plt.interactive(False)
     fig = plt.figure(figsize=(24, 16))
     ax = fig.add_subplot(111)
     p = ax.scatter(x=x0, y=y0, cmap='cool', c=color, alpha=0.5, s=8)
@@ -112,8 +90,7 @@ def pca_3d_plot(X_pca, target_names, color):
     fig = plt.figure(figsize=(24, 16))
     ax = fig.add_subplot(111, projection='3d')
 
-    p = ax.scatter(result['PCA0'], result['PCA1'], result['PCA2'],
-                     cmap='viridis', s=1, alpha=0.8, c=color)
+    p = ax.scatter(result['PCA0'], result['PCA1'], result['PCA2'], cmap='viridis', s=1, alpha=0.8, c=color)
     cbar = plt.colorbar(p)
     plt.show()
 
@@ -129,18 +106,18 @@ def generate_pca_report(pca):
     return pca_comp
 
 
-def pca_plot(X_pca, target_names, postcodes):
-    dims = X_pca.shape[1]
+def pca_plot(x_pca, target_names, postcodes):
+    dims = x_pca.shape[1]
     if dims == 2:
-        pca_2d_plot(X_pca, target_names, postcodes)
+        pca_2d_plot(x_pca, target_names, postcodes)
     elif dims == 3:
-        pca_3d_plot(X_pca, target_names, postcodes)
+        pca_3d_plot(x_pca, target_names, postcodes)
     else:
         print('PCA has %s dims, too many to plot', str(dims))
 
 
-def exploratory_pca(X, n_components):
-    X_ex_pca, pipe_ex = do_pca(X, n_components)
+def exploratory_pca(x, n_components):
+    x_ex_pca, pipe_ex = do_pca(x, n_components)
     explained_var = pipe_ex.named_steps['pca'].explained_variance_ratio_
     plt.plot(np.cumsum(np.round(explained_var, decimals=4) * 100))
     plt.axis([1, 20, 0, 100])
@@ -176,7 +153,7 @@ def table_similar_with_names(data, orig_name, comparison_names, target_names, X_
         last = df.tail(5)
         df = df.append(last.loc[:, cols])
     df = df.loc[:, cols]
-    df = df.iloc[:,~df.columns.duplicated()]
+    df = df.iloc[:, ~df.columns.duplicated()]
     return df
 
 
@@ -210,7 +187,7 @@ def visualize_similar_with_names(data, orig_name, comparison_names, target_names
     #    ax.xaxis.grid(False)
     #    ax.yaxis.grid(True)
 
-    #sns.despine(left=True, bottom=True)
+    # sns.despine(left=True, bottom=True)
     plt.show()
 
     return df

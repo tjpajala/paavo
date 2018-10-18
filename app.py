@@ -25,33 +25,33 @@ def make_graph_data(df, fill_color='white', hover=True):
         x_centroids = []
         y_centroids = []
         if row['geometry'].type == 'Polygon':
-            #x,y = np.array(row.geometry.exterior.xy)
+            # x,y = np.array(row.geometry.exterior.xy)
             x = row.geometry.exterior.xy[0].tolist()
             y = row.geometry.exterior.xy[1].tolist()
             c_x = row.geometry.centroid.xy[0].tolist()
             c_y = row.geometry.centroid.xy[1].tolist()
-            #c_x, c_y = np.array(row.geometry.centroid.xy)
+            # c_x, c_y = np.array(row.geometry.centroid.xy)
             xs = xs + x
             ys = ys + y
             x_centroids = x_centroids + c_x
             y_centroids = y_centroids + c_y
         elif row['geometry'].type == 'MultiPolygon':
-            if len(row.geometry)!=1:
-                geom=list(row.geometry)
+            if len(row.geometry) != 1:
+                geom = list(row.geometry)
             else:
                 geom = list(row.geometry[0])
-            #x,y = np.array([poly.exterior.xy for poly in geom])
-            #x,y = np.array(row['geometry'].convex_hull.exterior.xy)
-            #x = [poly.exterior.xy[0] for poly in geom]
-            #y = [poly.exterior.xy[1] for poly in geom]
+            # x,y = np.array([poly.exterior.xy for poly in geom])
+            # x,y = np.array(row['geometry'].convex_hull.exterior.xy)
+            # x = [poly.exterior.xy[0] for poly in geom]
+            # y = [poly.exterior.xy[1] for poly in geom]
             x = ([poly.exterior.xy[0].tolist() for
                   poly in row['geometry']])
             y = ([poly.exterior.xy[1].tolist() for
                   poly in row['geometry']])
-            #c_x = np.array([poly.centroid.x for poly in geom])
-            #c_y = np.array([poly.centroid.y for poly in geom])
-            #c_x = np.array(np.mean([poly.centroid.x for poly in geom]))
-            #c_y = np.array(np.mean([poly.centroid.y for poly in geom]))
+            # c_x = np.array([poly.centroid.x for poly in geom])
+            # c_y = np.array([poly.centroid.y for poly in geom])
+            # c_x = np.array(np.mean([poly.centroid.x for poly in geom]))
+            # c_y = np.array(np.mean([poly.centroid.y for poly in geom]))
             c_x = [np.mean([poly.centroid.x for poly in geom])]
             c_y = [np.mean([poly.centroid.y for poly in geom])]
             for segment in range(len(x)):
@@ -67,31 +67,31 @@ def make_graph_data(df, fill_color='white', hover=True):
         else:
             print('stop')
         county_outline = dict(
-                type = 'scatter',
-                showlegend = False,
-                legendgroup = "shapes",
-                line = dict(color='grey', width=0.2),
-                x=xs,
-                y=ys,
-                fill='toself',
-                fillcolor = fill_color,
-                mode='lines',
-                hoverinfo='none'
+            type='scatter',
+            showlegend=False,
+            legendgroup="shapes",
+            line=dict(color='grey', width=0.2),
+            x=xs,
+            y=ys,
+            fill='toself',
+            fillcolor=fill_color,
+            mode='lines',
+            hoverinfo='none'
         )
         hover_point = dict(
-                type = 'scatter',
-                showlegend = False,
-                legendgroup = "centroids",
-                name = '',
-                text = row.nimi,
-                marker = dict(size=2, color='red', opacity=0),
-                x=x_centroids,
-                y=y_centroids,
-                mode="markers",
-                fill='none'
+            type='scatter',
+            showlegend=False,
+            legendgroup="centroids",
+            name='',
+            text=row.nimi,
+            marker=dict(size=2, color='red', opacity=0),
+            x=x_centroids,
+            y=y_centroids,
+            mode="markers",
+            fill='none'
         )
         annotation = dict(
-            type = 'scatter',
+            type='scatter',
             showlegend=False,
             x=x_centroids,
             y=y_centroids,
@@ -105,46 +105,45 @@ def make_graph_data(df, fill_color='white', hover=True):
         if hover:
             plot_data4.append(hover_point)
 
-
-    #fig = dict(data=plot_data4, layout=layout)
-    #py.plot(fig, filename='test.html')
+    # fig = dict(data=plot_data4, layout=layout)
+    # py.plot(fig, filename='test.html')
     return plot_data4
 
 
 def define_layout():
     layout = dict(
-        hovermode = 'closest',
-        xaxis = dict(
-            autorange = True,
-            #range=[coords_max['minx'], coords_max['maxx']],
-            showgrid = True,
-            zeroline = False,
+        hovermode='closest',
+        xaxis=dict(
+            autorange=True,
+            # range=[coords_max['minx'], coords_max['maxx']],
+            showgrid=True,
+            zeroline=False,
             showticklabels=False,
             ticks='outside',
             domain=[0.1, 0.9],
             fixedrange=False
         ),
-        yaxis = dict(
-            autorange = True,
-            #range=[coords_max['miny'], coords_max['maxy']],
-            showgrid = True,
-            zeroline = False,
+        yaxis=dict(
+            autorange=True,
+            # range=[coords_max['miny'], coords_max['maxy']],
+            showgrid=True,
+            zeroline=False,
             showticklabels=False,
             ticks='outside',
             fixedrange=False,
             scaleanchor='x',
-            scaleratio= 1,
+            scaleratio=1,
             domain=[0.1, 0.9]
         ),
-        margin = dict(
+        margin=dict(
             t=0,
             b=0,
             r=0,
             l=0
         ),
-        width = 900,
-        height = 2*450,
-        dragmode = 'select'
+        width=900,
+        height=2 * 450,
+        dragmode='select'
     )
     return layout
 
@@ -157,72 +156,71 @@ def format_numeric_table_cols(tb, numcols=None):
 
 
 df = pd.read_csv('data_to_plotly.csv', dtype={
-     'pono': 'O',
-     'pono.level': 'int64',
-     'vuosi': 'int64',
-     'nimi': 'O',
-     'he_kika': 'float64',
-     'ra_ke': 'float64',
-     'ra_raky': 'float64',
-     'ra_muut': 'float64',
-     'ra_asrak': 'float64',
-     'ra_asunn': 'float64',
-     'ra_as_kpa': 'float64',
-     'ra_pt_as': 'float64',
-     'ra_kt_as': 'float64',
-     'tp_tyopy': 'float64',
-     'tp_alku_a': 'float64',
-     'tp_jalo_bf': 'float64',
-     'tp_palv_gu': 'float64',
-     'tr_mtu': 'float64',
-     'te_takk': 'float64',
-     'te_as_valj': 'float64',
-     'he_naiset': 'float64',
-     'hr_hy_tul': 'float64',
-     'hr_ke_tul': 'float64',
-     'hr_ovy': 'float64',
-     'hr_pi_tul': 'float64',
-     'pt_0_14': 'float64',
-     'pt_elakel': 'float64',
-     'pt_opisk': 'float64',
-     'pt_tyoll': 'float64',
-     'pt_tyott': 'float64',
-     'pt_tyovu': 'float64',
-     'te_aik': 'float64',
-     'te_eil_np': 'float64',
-     'te_elak': 'float64',
-     'te_laps': 'float64',
-     'te_nuor': 'float64',
-     'te_omis_as': 'float64',
-     'te_vuok_as': 'float64',
-     'tr_hy_tul': 'float64',
-     'tr_ke_tul': 'float64',
-     'tr_pi_tul': 'float64',
-     'rakennukset_bin': 'float64',
-     'hinta': 'int64',
-     'yliopistot': 'int64',
-     'amk': 'int64'})
+    'pono': 'O',
+    'pono.level': 'int64',
+    'vuosi': 'int64',
+    'nimi': 'O',
+    'he_kika': 'float64',
+    'ra_ke': 'float64',
+    'ra_raky': 'float64',
+    'ra_muut': 'float64',
+    'ra_asrak': 'float64',
+    'ra_asunn': 'float64',
+    'ra_as_kpa': 'float64',
+    'ra_pt_as': 'float64',
+    'ra_kt_as': 'float64',
+    'tp_tyopy': 'float64',
+    'tp_alku_a': 'float64',
+    'tp_jalo_bf': 'float64',
+    'tp_palv_gu': 'float64',
+    'tr_mtu': 'float64',
+    'te_takk': 'float64',
+    'te_as_valj': 'float64',
+    'he_naiset': 'float64',
+    'hr_hy_tul': 'float64',
+    'hr_ke_tul': 'float64',
+    'hr_ovy': 'float64',
+    'hr_pi_tul': 'float64',
+    'pt_0_14': 'float64',
+    'pt_elakel': 'float64',
+    'pt_opisk': 'float64',
+    'pt_tyoll': 'float64',
+    'pt_tyott': 'float64',
+    'pt_tyovu': 'float64',
+    'te_aik': 'float64',
+    'te_eil_np': 'float64',
+    'te_elak': 'float64',
+    'te_laps': 'float64',
+    'te_nuor': 'float64',
+    'te_omis_as': 'float64',
+    'te_vuok_as': 'float64',
+    'tr_hy_tul': 'float64',
+    'tr_ke_tul': 'float64',
+    'tr_pi_tul': 'float64',
+    'rakennukset_bin': 'float64',
+    'hinta': 'int64',
+    'yliopistot': 'int64',
+    'amk': 'int64'})
 
 df.drop(labels='Unnamed: 0', axis=1, inplace=True)
 df = map_fi_plot.merge_to_polygons_for_year(df, 2018)
-#df.drop(labels=['vuosi_y', 'nimi_y'], axis=1, inplace=True)
+# df.drop(labels=['vuosi_y', 'nimi_y'], axis=1, inplace=True)
 df = df.rename(index=str, columns={'vuosi_y': 'vuosi', 'nimi_y': 'nimi'})
-#get uni data
-#amk, yl = data_transforms.get_edu_data()
-#df['yliopistot'] = [yl[x] if x in yl else 0 for x in df.pono]
-#df['amk'] = [amk[x] if x in amk else 0 for x in df.pono]
+# get uni data
+# amk, yl = data_transforms.get_edu_data()
+# df['yliopistot'] = [yl[x] if x in yl else 0 for x in df.pono]
+# df['amk'] = [amk[x] if x in amk else 0 for x in df.pono]
 
 X, y, target_names = viz.get_pca_data(df, 2018, 5)
 target_names.index = range(len(target_names))
 X_pca, pipe = viz.do_pca(X, 5)
 
-#plot_data4 = make_graph_data(df)
-#with open('plotly_plot_data4', 'wb') as f:
+# plot_data4 = make_graph_data(df)
+# with open('plotly_plot_data4', 'wb') as f:
 #    pickle.dump(plot_data4, f)
 
 with open('plotly_plot_data4', 'rb') as f:
     data_pickle = pickle.load(f)
-
 
 pono_name_dict = dict(zip(df.sort_values(by='pono').pono + ' ' + df.sort_values(by='pono').nimi,
                           df.sort_values(by='pono').nimi))
@@ -298,7 +296,7 @@ app.layout = html.Div([
                 value=10
             ),
             dcc.Graph(id='comparison-table')
-            ],
+        ],
             style={'width': '35%', 'display': 'inline-block'}),
 
         html.Div([
@@ -307,10 +305,9 @@ app.layout = html.Div([
         ], style={'width': '65%', 'float': 'right', 'display': 'inline-block'})
     ], style={'display': 'flex', 'align-items': 'flex-start', 'justify-content': 'space-around'}),
 
-
-
-
 ], )
+
+
 @app.callback(
     dash.dependencies.Output('comparison-table', 'figure'),
     [dash.dependencies.Input('origin-area', 'value'),
@@ -323,7 +320,7 @@ def update_table(origin_name, move_type,
                  range_km, n_most,
                  max_price, target):
     df_filtered = similarity.filter_w_price(df, max_price, [origin_name, target])
-    #transform values to ranks for easy understanding
+    # transform values to ranks for easy understanding
     df_filtered_ranks = similarity.full_df_to_ranks(df_filtered, bins=10)
     df_origin = df.loc[df['nimi'] == origin_name, :]
     if move_type == 'difference':
@@ -336,36 +333,41 @@ def update_table(origin_name, move_type,
     d = similarity.pairwise_distances(X_pca, X_pca, 'euclidean')
     similar = similarity.get_similar_in_geo_area(included, origin_name, d,
                                                  target_names, n_most)
-    tb = viz.table_similar_with_names(included_ranks, origin_name, similar, target_names, X_pca, ['pono','nimi','he_kika',
-                                                                                            'ra_asunn','te_laps',
-                                                                                            'te_as_valj','tp_tyopy',
-                                                                                            'tr_mtu', 'yliopistot', 'amk'],
+    tb = viz.table_similar_with_names(included_ranks, origin_name, similar, target_names, X_pca,
+                                      ['pono', 'nimi', 'he_kika',
+                                       'ra_asunn', 'te_laps',
+                                       'te_as_valj', 'tp_tyopy',
+                                       'tr_mtu', 'yliopistot', 'amk'],
                                       tail=False)
     tb = tb.drop_duplicates()
-    
+
     tb = format_numeric_table_cols(tb, numcols=['dist'])
-    cols = [x for x in tb.columns.values if x not in ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
-                          'dist', 'rakennukset_bin']]
-    #tb.loc[:, cols] = tb.loc[:, cols].applymap(lambda x: similarity.value_to_plusses(x))
+    cols = [x for x in tb.columns.values if
+            x not in ['geometry', 'kunta', 'kuntanro', 'pono', 'pono.level', 'nimi', 'nimi_x', 'vuosi',
+                      'dist', 'rakennukset_bin']]
+    # tb.loc[:, cols] = tb.loc[:, cols].applymap(lambda x: similarity.value_to_plusses(x))
 
     trace = go.Table(
-        header=dict(values=list(['Pono','Nimi','Keski-ikä', 'Asunnot', 'Lapsitaloudet', 'Työpaikat','Mediaanitulo', 'Yliopistot', 'AMK' ,'Dist']),
+        header=dict(values=list(
+            ['Pono', 'Nimi', 'Keski-ikä', 'Asunnot', 'Lapsitaloudet', 'Työpaikat', 'Mediaanitulo', 'Yliopistot', 'AMK',
+             'Dist']),
                     fill=dict(color='#C2D4FF'),
                     align=['left'] * 5,
                     height=40),
-        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.ra_asunn, tb.te_laps, tb.tp_tyopy, tb.tr_mtu, tb.yliopistot, tb.amk, tb.dist],
+        cells=dict(values=[tb.pono, tb.nimi, tb.he_kika, tb.ra_asunn, tb.te_laps, tb.tp_tyopy, tb.tr_mtu, tb.yliopistot,
+                           tb.amk, tb.dist],
                    fill=dict(color='#F5F8FF'),
                    align=['left'] * 5,
                    height=30)
     )
-    #py.plot([trace], 'test.html')
+    # py.plot([trace], 'test.html')
     return {'data': [trace],
             'layout': dict(autosize=True, margin=dict(
-                               t=0,
-                               b=0,
-                               r=0,
-                               l=0
-                           )
+                t=0,
+                b=0,
+                r=0,
+                l=0
+            )
                            )
             }
 
@@ -378,7 +380,6 @@ def update_table(origin_name, move_type,
     #         html.Td(tb.iloc[i][col]) for col in tb.columns
     #     ]) for i in range(min(len(tb), len(tb)))]
     # )
-
 
 
 @app.callback(
@@ -395,7 +396,7 @@ def update_graph(origin_name, move_type,
     df_filtered = similarity.filter_w_price(df, max_price, [origin_name, target])
     df_origin = df.loc[df['nimi'] == origin_name, :]
     if move_type == 'difference':
-        target=origin_name
+        target = origin_name
     area, included = map_fi_plot.get_included_area(df_filtered, move_type, origin_name, range_km, target)
     X, y, target_names = viz.get_pca_data(included, 2018, 5)
     target_names.index = range(len(target_names))
@@ -414,28 +415,28 @@ def update_graph(origin_name, move_type,
     layout = define_layout()
 
     return {
-#        'data': set_fill_colors_for_origin_and_comp(plot_data4, origin_name, similar, target),
+        #        'data': set_fill_colors_for_origin_and_comp(plot_data4, origin_name, similar, target),
         'data': set_fill_colors_for_origin_and_comp(make_graph_data(included), origin_name, similar, target),
-        'layout':  layout
+        'layout': layout
     }
 
 
 def set_fill_colors_for_origin_and_comp(plot_data4, origin_name, similar, target):
-    #reset colors to white
+    # reset colors to white
     all_idx = range(0, len(plot_data4), 3)
     for idx in all_idx:
         plot_data4[idx]['fillcolor'] = 'white'
-        plot_data4[idx+1]['text'] = ''
-    origin_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text']==origin_name][0]
-    plot_data4[origin_idx-2]['fillcolor'] = 'red'
-    plot_data4[origin_idx-1]['text'] = plot_data4[origin_idx]['text']
+        plot_data4[idx + 1]['text'] = ''
+    origin_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text'] == origin_name][0]
+    plot_data4[origin_idx - 2]['fillcolor'] = 'red'
+    plot_data4[origin_idx - 1]['text'] = plot_data4[origin_idx]['text']
     comp_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text'] in similar]
     for idx in comp_idx:
-        plot_data4[idx-2]['fillcolor'] = 'orange'
+        plot_data4[idx - 2]['fillcolor'] = 'orange'
         plot_data4[idx - 1]['text'] = plot_data4[idx]['text']
-    target_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text']==target][0]
+    target_idx = [x for x in range(2, len(plot_data4), 3) if plot_data4[x]['text'] == target][0]
     plot_data4[target_idx - 2]['fillcolor'] = 'purple'
-    plot_data4[target_idx - 1]['text'] = 'Target: '+plot_data4[target_idx]['text']
+    plot_data4[target_idx - 1]['text'] = 'Target: ' + plot_data4[target_idx]['text']
     return plot_data4
 
 
