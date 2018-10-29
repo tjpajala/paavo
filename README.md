@@ -23,7 +23,7 @@ If you want to run the automated tests, just navigate to the folder you just use
 python -m pytest
 ```
 
-##Running the demo
+## Running the demo
 Navigate to the folder you used and start the app:
 ```
 python run app.py
