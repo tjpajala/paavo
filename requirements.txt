@@ -6,7 +6,6 @@ ipywidgets
 bokeh
 seaborn
 geopandas
-pyjstat
 requests
 numpy
 matplotlib
