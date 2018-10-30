@@ -18,13 +18,13 @@ git clone https://github.com/tjpajala/paavo
 
 ### Running the tests
 
-If you want to run the automated tests, just navigate to the folder you just used and run pytest:
+If you want to run the automated tests, just navigate to the folder you just created and run pytest:
 ```
 python -m pytest
 ```
 
 ## Running the demo
-Navigate to the folder you used and start the app:
+Navigate to the folder you created and start the app:
 ```
 python run app.py
 ```
@@ -34,6 +34,7 @@ python run app.py
 * [GeoPandas](http://geopandas.org/) - GeoPandas geospatial library
 * [Plotly](https://plot.ly/products/dash/) - Plotly dashboard engine
 * [pytest](https://docs.pytest.org/en/latest/contents.html) - pytest testing library
+* [PAAVO](https://www.stat.fi/tup/paavo/index_en.html) - Open data by postal code in Finland
 
 
 ## Authors
