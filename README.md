@@ -26,7 +26,7 @@ python -m pytest
 ## Running the demo
 Navigate to the folder you created and start the app:
 ```
-python run app.py
+python app.py
 ```
 
 ## Built With
