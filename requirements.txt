@@ -11,3 +11,5 @@ numpy
 matplotlib
 pandas
 scikit-learn
+dash
+dash-core-components
