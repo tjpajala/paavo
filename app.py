@@ -288,7 +288,7 @@ app.layout = html.Div([
             html.P('How many alternatives do you want: ', style={'display': 'inline-block'}),
             dcc.Input(
                 id='nmost-input',
-                inputmode='numeric',
+                inputMode='numeric',
                 min=3,
                 max=30,
                 step=1,

@@ -50,17 +50,20 @@ def merge_to_polygons_for_year(dataframe, year):
 
 
 def map_fi_postinumero(dataframe, title='', color_var='pt_tyoll', year=2018, cmap='summer', plot_cities=True):
+    fontsize=26
     fig = plt.figure(figsize=DEFAULT_FIGSIZE)
     ax = fig.add_subplot(111)
-    plt.title(title)
+    plt.title(title, fontsize=fontsize)
     df = merge_to_polygons_for_year(dataframe, year)
     df.plot(column=color_var, cmap=cmap, ax=ax, legend=True)
     if plot_cities:
         for index, row in df.loc[df['nimi_x'].isin(CITIES), :].iterrows():
-            plt.scatter(x=row['geometry'].centroid.x, y=row['geometry'].centroid.y, color='red', s=3)
-            plt.annotate(row['nimi_x'], xy=(row['geometry'].centroid.x, row['geometry'].centroid.y), color='red')
+            plt.scatter(x=row['geometry'].centroid.x, y=row['geometry'].centroid.y, color='red', s=35)
+            #plt.annotate(row['nimi_x'], xy=(row['geometry'].centroid.x, row['geometry'].centroid.y),
+            #             color='red', size=fontsize-8)
     fig.get_axes()[0].set_axis_off()
-    fig.get_axes()[1].set_ylabel(color_var, rotation=270)
+    fig.get_axes()[1].set_ylabel(color_var, rotation=270, fontsize=fontsize-3)
+    fig.get_axes()[1].tick_params(labelsize=fontsize-10)
     plt.show()
 
 
