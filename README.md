@@ -12,7 +12,7 @@ What things you need to install the software and how to install them
 
 If you're using the Anaconda environment:
 ```
-conda install shapely pytest plotly dash ipywidgets bokeh seaborn geopandas pyjstat requests numpy matplotlib pandas scikit-learn
+conda install shapely pytest plotly dash ipywidgets bokeh seaborn geopandas requests numpy matplotlib pandas scikit-learn
 git clone https://github.com/tjpajala/paavo
 ```
 
